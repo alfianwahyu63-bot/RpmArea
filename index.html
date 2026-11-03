@@ -2,48 +2,50 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c38"><meta name="description" content="Monitoring POINT QTY 50% + Net Sales 50% untuk 12 toko dalam satu area, dengan input 7 hari dan sinkronisasi opsional.">
-<title>SalesPulse · Area 12 Toko · Navigasi Premium V5</title>
+<title>RpmArea · Weekly Performance</title>
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" href="./icon-192.png"><link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="stylesheet" href="./style.css">
 </head>
-<body data-theme="aurora">
+<body data-theme="neon">
 <div id="app" class="app">
  <aside class="sidebar" aria-label="Navigasi utama">
-   <div class="logo"><img src="./icon-192.png" alt="Logo RPM"><div><strong id="sideBrand">SalesPulse Area</strong><small>MONITORING 12 TOKO</small></div></div>
+   <div class="logo"><img src="./icon-192.png" alt="Logo RPM"><div><strong id="sideBrand">SalesPulse Area</strong><small id="sideSubtitle">MONITORING 12 TOKO</small></div></div>
    <div class="side-label">MENU AREA</div>
    <nav class="nav nav-modern" aria-label="Menu monitoring area">
     <button type="button" class="navbtn active" data-page="dashboard" aria-label="Dashboard monitoring area" title="Dashboard monitoring area"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2.7" y="3.4" width="7.65" height="7.65" rx="2"/><rect x="13.6" y="3.4" width="7.65" height="4.7" rx="1.8"/><rect x="13.6" y="11.4" width="7.65" height="9.1" rx="2"/><rect x="2.7" y="14.3" width="7.65" height="6.2" rx="2"/></svg></span><span class="nav-text">Dashboard Area</span><span class="nav-short" aria-hidden="true">Dashboard</span></button>
     <button type="button" class="navbtn " data-page="input" aria-label="Input penjualan harian" title="Input penjualan harian"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 3.6h8.1a2 2 0 0 1 2 2v14.1a1.4 1.4 0 0 1-2.25 1.12L14 19.3l-2.1 1.52a1.4 1.4 0 0 1-1.65 0L8.2 19.3 6.3 20.82a1.4 1.4 0 0 1-2.25-1.12V7.1A3.5 3.5 0 0 1 7.55 3.6Z"/><path d="M8.4 9.1h6.9M8.4 12.3h6.9M8.4 15.5h4.3" stroke-linecap="round"/><path d="m17.6 5.1 2.1 2.1M16.5 8.3l3.1-3.1" stroke-linecap="round"/></svg></span><span class="nav-text">Input 7 Hari</span><span class="nav-short" aria-hidden="true">Input</span></button>
     <button type="button" class="navbtn " data-page="stores" aria-label="Master toko dan upload Excel" title="Master toko dan upload Excel"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4.2 10.2v9.4c0 .7.6 1.2 1.2 1.2h13.2c.7 0 1.2-.5 1.2-1.2v-9.4"/><path d="m3.4 6.5 1.7-3.2h13.8l1.7 3.2.6 3.2a2.3 2.3 0 0 1-4.45.7 2.4 2.4 0 0 1-4.7 0 2.4 2.4 0 0 1-4.7 0 2.3 2.3 0 0 1-4.45-.7Z"/><path d="M9 20.8v-6.6h6v6.6"/></svg></span><span class="nav-text">Master Toko & Excel</span><span class="nav-short" aria-hidden="true">Toko</span></button>
     <button type="button" class="navbtn " data-page="history" aria-label="Riwayat bulanan" title="Riwayat bulanan"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="4.6" width="18" height="16.6" rx="3"/><path d="M7.4 2.8v4M16.6 2.8v4M3.3 9.3h17.4" stroke-linecap="round"/><circle cx="12" cy="15.2" r="3.35"/><path d="M12 13.5v2l1.5.9" stroke-linecap="round"/></svg></span><span class="nav-text">Riwayat Bulanan</span><span class="nav-short" aria-hidden="true">Riwayat</span></button>
+    <button type="button" class="navbtn" data-page="settings" aria-label="Pengaturan tampilan" title="Pengaturan tampilan"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10 2.9h4l.7 2.25 1.6.95 2.35-.55 2 3.45-1.7 1.7v1.85l1.7 1.7-2 3.45-2.35-.55-1.6.95L14 20.6h-4l-.7-2.25-1.6-.95-2.35.55-2-3.45 1.7-1.7v-1.85l-1.7-1.7 2-3.45 2.35.55 1.6-.95Z"/><circle cx="12" cy="11.75" r="3.1"/></svg></span><span class="nav-text">Pengaturan</span><span class="nav-short" aria-hidden="true">Setelan</span></button>
    </nav>
-   <div class="side-bottom"><span class="online-dot"></span> <span id="saveState">Data tersimpan lokal</span><p>POINT = 50% QTY + 50% NS<br>Week: Senin—Minggu</p></div>
+   <div class="side-bottom"><span class="online-dot"></span> <span id="saveState">Data tersimpan lokal</span><p id="sidebarFootnote">POINT = 50% QTY + 50% NS<br>Week: Senin—Minggu</p></div>
  </aside>
  <main class="main">
   <header class="tophead">
     <div class="head-title"><span class="eyebrow" id="eyebrow">AREA PERFORMANCE • LIVE MONITORING</span><h1 id="mainTitle">Monitoring Penjualan 12 Toko</h1><p id="mainDescription">Pantau pencapaian POINT setiap toko dibandingkan Time Factor mingguan.</p></div>
     <div class="head-actions">
-      <button id="themeOpen" class="btn ghost" type="button">◈ <span>Ganti Tema</span></button>
-      <button id="textOpen" class="btn ghost" type="button">✎ <span>Edit Judul</span></button>
+      <button id="themeOpen" class="btn ghost legacy-personalization" type="button" hidden>◈ <span>Ganti Tema</span></button>
+      <button id="textOpen" class="btn ghost legacy-personalization" type="button" hidden>✎ <span>Edit Judul</span></button>
+      <button id="settingsShortcut" class="btn ghost" type="button" data-page="settings">⚙ <span>Pengaturan</span></button>
       <button id="cloudOpen" class="btn ghost" type="button">☁ <span id="cloudBadge">Cloud: Lokal</span></button>
     </div>
   </header>
-  <section class="filters" aria-label="Periode monitoring">
-   <div><div class="mini-label">PERIODE LAPORAN</div><div class="month-switch"><button id="prevMonth" type="button" aria-label="Bulan sebelumnya">‹</button><input id="monthInput" type="month" aria-label="Bulan laporan"><button id="nextMonth" type="button" aria-label="Bulan berikutnya">›</button></div></div>
-   <div class="week-filter"><div class="mini-label">PILIH MINGGU · SENIN—MINGGU</div><div class="weeks" id="weeks"></div></div>
+  <section class="filters" data-layout-key="filters" aria-label="Periode monitoring">
+   <div><div class="mini-label" id="periodLabel">PERIODE LAPORAN</div><div class="month-switch"><button id="prevMonth" type="button" aria-label="Bulan sebelumnya">‹</button><input id="monthInput" type="month" aria-label="Bulan laporan"><button id="nextMonth" type="button" aria-label="Bulan berikutnya">›</button></div></div>
+   <div class="week-filter"><div class="mini-label" id="weekLabel">PILIH MINGGU · SENIN—MINGGU</div><div class="weeks" id="weeks"></div></div>
   </section>
   <section id="view-dashboard" class="view active" aria-labelledby="dashboardHeading">
-   <div class="hero">
-    <div><div class="hero-kicker">◉ WEEKLY AREA SCORECARD</div><h2 id="dashboardHeading">Performa area, <span>12 toko dalam satu layar.</span></h2><p>Achievement QTY dan Net Sales masing-masing berbobot 50%. Status ditentukan dari total POINT dibandingkan Time Factor hari berjalan.</p></div>
-    <div class="tf-box"><small>TIME FACTOR</small><strong id="heroTF">—</strong><span id="heroDay">0 / 7 HARI</span></div>
+   <div class="hero" data-layout-key="hero">
+    <div><div class="hero-kicker" id="heroKicker">◉ WEEKLY AREA SCORECARD</div><h2 id="dashboardHeading"><span id="heroTitleLine">Performa area,</span> <span id="heroHighlight">12 toko dalam satu layar.</span></h2><p id="heroDescription">Achievement QTY dan Net Sales masing-masing berbobot 50%. Status ditentukan dari total POINT dibandingkan Time Factor hari berjalan.</p></div>
+    <div class="tf-box"><small id="timeFactorLabel">TIME FACTOR</small><strong id="heroTF">—</strong><span id="heroDay">0 / 7 HARI</span></div>
    </div>
-   <div id="kpis" class="kpis"></div>
-   <section class="surface resume-panel"><div class="panel-header"><div><h3>📊 Resume RPM per Brand · 12 Toko</h3><p>POINT per brand, status terhadap TF, rata-rata POINT dan pencapaian area berbobot target gabungan.</p></div><div class="inline-actions resume-export-actions"><span class="pill muted" id="resumeStylePreview">Mode unduh: Tabel Klasik</span><label class="select-wrap compact">Template <select id="resumeStyle" aria-label="Pilih template gambar resume"><option value="classic">Tabel Klasik</option><option value="dark">Dark Neon</option><option value="glass">Glass Soft</option></select></label><button id="exportResumePng" class="btn primary" type="button">🖼️ Buat Gambar PNG</button></div></div><div class="table-scroll"><table class="resume-table" id="resumeTable"></table></div><p class="resume-note">ACV AREA dihitung dari total aktual seluruh toko ÷ total target seluruh toko, bukan rata-rata persentase toko. Brand tanpa target QTY atau NS ditampilkan —.</p></section>
-   <div class="dashboard-grid">
-    <section class="surface" aria-label="Grafik POINT toko"><div class="panel-header"><div><h3>POINT per Toko</h3><p>Perbandingan POINT 50/50 terhadap target Time Factor</p></div><span class="pill muted" id="chartCount">0 / 12 TOKO</span></div><div id="pointBars" class="barlist"></div></section>
-    <section class="surface" aria-label="Pencapaian area"><div class="panel-header"><div><h3>Pencapaian Area</h3><p>Agregat dari target 12 toko</p></div></div><div id="areaRing" class="area-ring"></div><div id="areaBreakdown"></div></section>
+   <div id="kpis" class="kpis" data-layout-key="kpis"></div>
+   <section class="surface resume-panel" data-layout-key="resume"><div class="panel-header"><div><h3 id="resumeTitle">📊 Resume RPM per Brand · 12 Toko</h3><p id="resumeDescription">POINT per brand, status terhadap TF, rata-rata POINT dan pencapaian area berbobot target gabungan.</p></div><div class="inline-actions resume-export-actions"><span class="pill muted" id="resumeStylePreview">Mode unduh: Tabel Klasik</span><label class="select-wrap compact">Template <select id="resumeStyle" aria-label="Pilih template gambar resume"><option value="classic">Tabel Klasik</option><option value="dark">Dark Neon</option><option value="glass">Glass Soft</option></select></label><button id="exportResumePng" class="btn primary" type="button">🖼️ Buat Gambar PNG</button></div></div><div class="table-scroll"><table class="resume-table" id="resumeTable"></table></div><p class="resume-note" id="resumeNote">ACV AREA dihitung dari total aktual seluruh toko ÷ total target seluruh toko, bukan rata-rata persentase toko. Brand tanpa target QTY atau NS ditampilkan —.</p></section>
+   <div class="dashboard-grid" data-layout-key="charts">
+    <section class="surface" data-layout-key="storeChart" aria-label="Grafik POINT toko"><div class="panel-header"><div><h3 id="chartTitle">POINT per Toko</h3><p id="chartDescription">Perbandingan POINT 50/50 terhadap target Time Factor</p></div><span class="pill muted" id="chartCount">0 / 12 TOKO</span></div><div id="pointBars" class="barlist"></div></section>
+    <section class="surface" data-layout-key="areaChart" aria-label="Pencapaian area"><div class="panel-header"><div><h3 id="areaTitle">Pencapaian Area</h3><p id="areaDescription">Agregat dari target 12 toko</p></div></div><div id="areaRing" class="area-ring"></div><div id="areaBreakdown"></div></section>
    </div>
-   <section class="surface table-section"><div class="panel-header"><div><h3>Scorecard 12 Toko</h3><p>Kode, nama toko, pencapaian QTY, NS, POINT dan keterangan Time Factor.</p></div><div class="inline-actions"><input id="storeSearch" class="search" type="search" placeholder="Cari kode / nama toko" aria-label="Cari toko"><button id="exportScorecard" class="btn secondary" type="button">↓ Ekspor CSV</button></div></div>
+   <section class="surface table-section" data-layout-key="scorecard"><div class="panel-header"><div><h3 id="scoreTitle">Scorecard 12 Toko</h3><p id="scoreDescription">Kode, nama toko, pencapaian QTY, NS, POINT dan keterangan Time Factor.</p></div><div class="inline-actions"><input id="storeSearch" class="search" type="search" placeholder="Cari kode / nama toko" aria-label="Cari toko"><button id="exportScorecard" class="btn secondary" type="button">↓ Ekspor CSV</button></div></div>
     <div class="table-scroll"><table class="scoretable"><thead><tr><th>KODE TOKO</th><th>NAMA TOKO</th><th>TARGET QTY</th><th>TARGET NS</th><th>AKTUAL QTY</th><th>AKTUAL NS</th><th>ACV QTY</th><th>ACV NS</th><th>BOBOT QTY 50%</th><th>BOBOT NS 50%</th><th>POINT</th><th>KETERANGAN</th></tr></thead><tbody id="scoreBody"></tbody></table></div>
    </section>
   </section>
@@ -89,19 +91,68 @@ Toko: SC94
    <div class="sectionhead"><div><div class="eyebrow">ARSIP PENJUALAN</div><h2 id="historyHeading">Riwayat bulanan</h2><p>Riwayat tersimpan berdasarkan bulan dan minggu, dengan pemisahan target setiap toko.</p></div><button id="historyExport" class="btn secondary" type="button">↓ CSV Bulanan</button></div>
    <div id="historyContent" class="history-grid"></div>
   </section>
-  <footer class="footer"><span>SalesPulse Area · 12 Store · EXCEL HPP OTOMATIS v6.0</span><span>QTY 50% + NS 50% = POINT • TF Senin–Minggu</span></footer>
+  <section id="view-settings" class="view" aria-labelledby="settingsHeading">
+    <div class="sectionhead setting-intro"><div><span class="eyebrow">PERSONALISASI · RpmArea</span><h2 id="settingsHeading">Buat dashboard versimu.</h2><p>Atur warna, ubah tulisan, atau sembunyikan komponen. Angka penjualan, perhitungan, dan data toko tidak berubah.</p></div><button type="button" class="btn primary" data-page="dashboard">↗ Lihat Dashboard</button></div>
+    <div class="settings-tabs" role="tablist" aria-label="Kategori pengaturan">
+       <button type="button" class="settings-tab active" data-settings-tab="theme" role="tab" aria-selected="true">✦ Tema &amp; Gaya</button>
+       <button type="button" class="settings-tab" data-settings-tab="text" role="tab" aria-selected="false">✎ Edit Teks</button>
+       <button type="button" class="settings-tab" data-settings-tab="layout" role="tab" aria-selected="false">◫ Tampil / Sembunyi</button>
+    </div>
+    <div id="settingsThemePanel" class="settings-panel active" role="tabpanel">
+      <section class="surface setting-surface"><div class="setting-headline"><div><h3>Pilih tema dashboard</h3><p>Ubah palet tampilan secara langsung, tanpa mengubah angka laporan.</p></div><span class="setting-chip">LIVE PREVIEW</span></div>
+        <div id="settingsThemeGrid" class="settings-theme-grid"></div>
+        <div class="style-options"><label class="settings-toggle"><span><strong>Efek glow</strong><small>Efek cahaya pada kartu dan tombol.</small></span><input type="checkbox" id="settingGlow" checked></label><label class="settings-toggle"><span><strong>Tampilan ringkas</strong><small>Perkecil jarak antar kartu untuk layar HP.</small></span><input type="checkbox" id="settingCompact"></label></div>
+      </section>
+      <section class="surface setting-preview"><div class="setting-headline"><div><h3>Pratinjau warna</h3><p>Kartu contoh mengikuti tema terpilih.</p></div></div><div class="setting-mini-grid"><div class="preview-card"><span>QTY ACHIEVEMENT</span><strong>87,5%</strong><div class="preview-track"><i style="width:87.5%"></i></div></div><div class="preview-card secondary"><span>AREA POINT</span><strong>92,8%</strong><div class="preview-track"><i style="width:92.8%"></i></div></div></div></section>
+    </div>
+    <div id="settingsTextPanel" class="settings-panel" role="tabpanel">
+      <section class="surface setting-surface"><div class="setting-headline"><div><h3>Edit semua tulisan dashboard</h3><p>Ubah label apa saja di bawah ini. Matikan <b>Tampil</b> jika teks ingin dikosongkan. Nilai penjualan tetap otomatis.</p></div><span id="textItemCount" class="setting-chip">—</span></div>
+        <label class="setting-search-label">Cari teks / bagian dashboard<input type="search" id="settingsTextSearch" class="settings-search" placeholder="Contoh: judul, scorecard, POINT, footer..."></label>
+        <div id="settingsTextEditor" class="settings-text-editor"></div>
+        <div class="setting-actions"><button class="btn secondary" id="resetTextSettings" type="button">↺ Kembalikan semua teks default</button></div>
+      </section>
+    </div>
+    <div id="settingsLayoutPanel" class="settings-panel" role="tabpanel">
+      <section class="surface setting-surface"><div class="setting-headline"><div><h3>Atur isi dashboard</h3><p>Aktifkan atau nonaktifkan kartu, grafik, dan tabel. Teks dapat disembunyikan satu per satu dari tab Edit Teks.</p></div></div><div id="settingsLayoutEditor" class="settings-layout-editor"></div><div class="setting-actions"><button class="btn secondary" id="resetLayoutSettings" type="button">↺ Tampilkan semua komponen</button></div></section>
+    </div>
+    <section class="surface shared-ui-panel" aria-label="Sinkronisasi pengaturan semua perangkat">
+     <div class="setting-headline"><div><h3>☁ Tampilan seragam untuk semua HP</h3><p>Semua perubahan tema, teks, dan centang Tampil/Sembunyi tersimpan di HP dahulu, lalu dikirim sebagai <b>1 dokumen konfigurasi</b> ke Firebase. Tidak perlu mengunggah 865 data penjualan.</p></div><span class="setting-chip">UI CLOUD</span></div>
+     <p id="sharedUIStatus" class="shared-ui-status" role="status" aria-live="polite">Pengaturan lokal siap. Hubungkan Firebase untuk menyamakan semua HP.</p>
+     <div class="inline-actions"><button type="button" class="btn primary" id="sharedUIPublish">↑ Jadikan tampilan HP ini untuk semua HP</button></div>
+     <p class="cloud-small">HP lain akan mengikuti tampilan terbaru saat online dan memakai versi aplikasi yang sama. Perubahan terakhir yang berhasil disimpan di cloud menjadi acuan.</p>
+    </section>
+    <section class="surface setting-safe"><div><h3>🔐 Data &amp; keamanan</h3><p>Pengaturan tampilan dipisahkan dari transaksi. Backup data sebelum mengganti perangkat atau login cloud pertama kali.</p></div><div class="inline-actions"><button id="settingsBackup" type="button" class="btn secondary">↓ Backup data &amp; pengaturan</button><button id="settingsRestore" type="button" class="btn ghost">↑ Restore backup</button></div></section>
+  </section>
+  <footer class="footer" data-layout-key="footer"><span id="footerLeft">SalesPulse Area · 12 Store · EXCEL HPP OTOMATIS v6.0</span><span id="footerRight">QTY 50% + NS 50% = POINT • TF Senin–Minggu</span></footer>
  </main>
 </div>
 <input type="file" id="excelFile" accept=".xlsx" hidden><input type="file" id="csvFile" accept=".csv,.txt" hidden><input type="file" id="jsonFile" accept=".json" hidden>
-<dialog id="themeDialog" class="modal"><div class="modal-head"><div><small>PERSONALISASI</small><h3>Tema Dashboard</h3></div><button class="close" type="button" data-close="themeDialog">×</button></div><p>Pilih warna favorit, setiap HP dapat menggunakan tema berbeda.</p><div id="themeOptions" class="theme-options"></div></dialog>
+<dialog id="themeDialog" class="modal"><div class="modal-head"><div><small>PERSONALISASI</small><h3>Tema Dashboard</h3></div><button class="close" type="button" data-close="themeDialog">×</button></div><p>Tema akan sama di seluruh HP yang masuk ke workspace area setelah disimpan ke cloud.</p><div id="themeOptions" class="theme-options"></div></dialog>
 <dialog id="textDialog" class="modal"><div class="modal-head"><div><small>PERSONALISASI</small><h3>Judul & Keterangan</h3></div><button class="close" type="button" data-close="textDialog">×</button></div><form id="editTextForm"><label>Nama Aplikasi<input name="appName" maxlength="50"></label><label>Judul Utama<input name="title" maxlength="90"></label><label>Keterangan<textarea name="description" rows="3" maxlength="300"></textarea></label><label>Nama Area<input name="area" maxlength="50"></label><button class="btn primary block" type="submit">Simpan Teks</button></form></dialog>
 <dialog id="storeDialog" class="modal"><div class="modal-head"><div><small>MASTER TOKO</small><h3 id="storeDialogTitle">Tambah Toko</h3></div><button class="close" type="button" data-close="storeDialog">×</button></div><form id="storeForm"><input type="hidden" name="oldCode"><label>Kode Toko<input name="code" required maxlength="40" placeholder="Contoh: RPM01"></label><label>Nama Toko<input name="name" required maxlength="100" placeholder="Nama toko"></label><label>Target QTY (1 minggu)<input name="targetQty" required type="number" min="0" step="any"></label><label>Target NS (1 minggu)<input name="targetNS" required type="number" min="0" step="any"></label><button class="btn primary block" type="submit">Simpan Toko</button></form></dialog>
 <dialog id="pluDialog" class="modal"><div class="modal-head"><div><small>KATALOG MINGGUAN</small><h3>Tambah PLU</h3></div><button class="close" type="button" data-close="pluDialog">×</button></div><form id="pluForm"><label>PLU<input name="plu" maxlength="50" required placeholder="Kode PLU"></label><label>Brand (opsional)<input name="brand" maxlength="70"></label><label>Deskripsi Produk<input name="description" maxlength="180" required></label><label>HPP / Harga per unit<input name="hpp" type="number" min="0" step="any" value="0"></label><button class="btn primary block" type="submit">Tambahkan</button></form></dialog>
-<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>FIREBASE · MULTI PENGGUNA</small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-status" id="cloudStatus">Mode lokal. Mengaktifkan koneksi Firebase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Firebase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden><div class="logged-email" id="cloudUser"></div><div class="inline-actions"><button id="cloudUploadLocal" type="button" class="btn primary" hidden>↑ Unggah data lokal ke area</button><button id="cloudLogout" type="button" class="btn danger">Keluar akun</button></div></div><p class="cloud-small">Untuk aktivasi pertama, admin harus membuat <code>workspaces/rpm-area-12/members/{UID}</code> berisi <code>role: editor</code> di Firestore. Backup JSON sebelum unggah data pertama.</p></dialog>
+<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>FIREBASE · MULTI PENGGUNA</small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Mengaktifkan koneksi Firebase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Firebase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
+  <section class="cloud-progress" id="cloudProgress" hidden aria-label="Kemajuan penyimpanan cloud">
+    <div class="cloud-progress-heading">
+      <div><small>PROGRES SINKRONISASI</small><strong id="cloudProgressTitle">Menyiapkan data...</strong></div>
+      <span class="cloud-progress-percent" id="cloudProgressPct">0%</span>
+    </div>
+    <div class="cloud-progress-track" id="cloudProgressTrack" role="progressbar" aria-label="Data berhasil disimpan di cloud" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="cloud-progress-fill" id="cloudProgressFill"></div>
+    </div>
+    <div class="cloud-progress-footer"><span id="cloudProgressCount">0 / 0 data berhasil</span><span id="cloudProgressHint">Menghitung data...</span></div>
+    <p class="cloud-progress-note">Persentase berdasarkan jumlah data yang <b>berhasil dikonfirmasi Firestore</b>, bukan perkiraan kecepatan internet.</p>
+  </section>
+  <section id="cloudConflict" class="cloud-conflict" hidden>
+  <strong>⚠️ Data lokal dan cloud tidak sama</strong><p id="cloudConflictText">Sinkronisasi dihentikan untuk melindungi data.</p>
+  <div class="inline-actions"><button type="button" class="btn secondary" id="cloudExportLocal">↓ Backup Lokal</button><button type="button" class="btn secondary" id="cloudExportRemote">↓ Backup Cloud</button><button type="button" class="btn primary" id="cloudResumeSafe" hidden>↑ Lanjutkan Data yang Belum Terkirim</button></div>
+  <p class="cloud-small">Tidak ada data yang dihapus atau ditimpa secara otomatis. Cek kedua backup sebelum melanjutkan.</p>
+</section><p id="cloudUIStatus" class="shared-ui-status" role="status" aria-live="polite">☁ Pengaturan tampilan menunggu koneksi.</p><div class="logged-email" id="cloudUser"></div><div class="inline-actions"><button id="cloudUploadLocal" type="button" class="btn primary" hidden>↑ Unggah data lokal ke area</button><button id="cloudLogout" type="button" class="btn danger">Keluar akun</button></div></div><p class="cloud-small">Untuk aktivasi pertama, admin harus membuat <code>workspaces/rpm-area-12/members/{UID}</code> berisi <code>role: editor</code> di Firestore. Backup JSON sebelum unggah data pertama.</p></dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="./vendor/jszip.min.js"></script>
 <script src="./excel.js"></script>
 <script src="./firebase-config.js"></script>
+<script src="./data-guard.js"></script>
 <script src="./app.js"></script>
 <script type="module" src="./cloud.js"></script>
 </body></html>
