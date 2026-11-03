@@ -50,7 +50,7 @@ if (!valid) {
     const [
       { initializeApp },
       { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut },
-      { getFirestore, doc, collection, getDocFromServer, getDocsFromServer, onSnapshot, writeBatch, setDoc, runTransaction, serverTimestamp }
+      { initializeFirestore, doc, collection, getDocFromServer, getDocsFromServer, onSnapshot, writeBatch, setDoc, updateDoc, runTransaction, serverTimestamp }
     ] = await Promise.all([
       import(`https://www.gstatic.com/firebasejs/${SDK}/firebase-app.js`),
       import(`https://www.gstatic.com/firebasejs/${SDK}/firebase-auth.js`),
@@ -64,7 +64,13 @@ if (!valid) {
       appId: config.appId
     }, 'SalesPulseArea12');
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    // V19: rute WebChannel long-polling untuk jaringan seluler/proxy yang
+    // menahan koneksi streaming terlalu lama. Diaktifkan saat inisialisasi,
+    // bukan mengganti transport di tengah penulisan yang belum pasti.
+    const db = initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+      experimentalLongPollingOptions: {timeoutSeconds: 15}
+    });
     const wid = config.workspaceId;
     const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k])])) : value;
     const norm = value => JSON.stringify(canonical(value));
@@ -199,6 +205,78 @@ if (!valid) {
         }
       },err=>uiMessage('❌ Gagal membaca pengaturan Firebase: '+String(err.code||err.message||err)+'. Pengaturan lokal tidak diubah.','error'));
     }
+    // Diagnostik tidak mengubah QTY, target, HPP, maupun konfigurasi tampilan.
+    // Setelah tes baca lolos, tes tulis HANYA memperbarui field updatedAt pada
+    // satu dokumen toko yang sudah ada. Timeout tidak dianggap sebagai gagal:
+    // permintaan dapat masih tertunda di SDK; jangan lakukan retry otomatis.
+    const diagnosticBtn=document.getElementById('cloudDiagnosticBtn');
+    const diagnosticResult=document.getElementById('cloudDiagnosticResult');
+    let diagnosticRunning=false;
+    let diagnosticWriteUnknown=false;
+    function diagnosticInfo(msg,kind='pending'){
+      if(!diagnosticResult)return;
+      diagnosticResult.textContent=msg;
+      diagnosticResult.dataset.state=kind;
+    }
+    function waitLimit(operation,ms,label){
+      let timeoutId;
+      return Promise.race([
+        operation,
+        new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(Object.assign(new Error(label+' tidak mendapat jawaban server dalam '+Math.round(ms/1000)+' detik.'),{code:'deadline-exceeded-local'})),ms)})
+      ]).finally(()=>clearTimeout(timeoutId));
+    }
+    diagnosticBtn?.addEventListener('click',async()=>{
+      if(diagnosticRunning||diagnosticWriteUnknown)return;
+      if(!auth.currentUser){diagnosticInfo('🔒 Login Firebase dahulu sebelum menjalankan tes.','error');return;}
+      if(!navigator.onLine){diagnosticInfo('📴 Perangkat terdeteksi offline. Sambungkan internet dahulu.','error');return;}
+      diagnosticRunning=true;
+      diagnosticBtn.disabled=true;
+      const startVersion=connectionVersion;
+      const uid=auth.currentUser.uid;
+      try{
+        diagnosticInfo('⏳ Tes 1/3: menghubungi Firestore untuk memeriksa keanggotaan (maksimal 20 detik)…');
+        const member=await waitLimit(getDocFromServer(doc(db,'workspaces',wid,'members',uid)),20000,'BACA ANGGOTA');
+        if(startVersion!==connectionVersion)return;
+        if(!member.exists()){diagnosticInfo('❌ Dokumen anggota tidak ditemukan: workspaces/'+wid+'/members/{UID}. Minta admin memasukkan UID kamu.','error');return;}
+        const role=String(member.data()?.role||'(tanpa role)');
+        diagnosticInfo('✅ Baca anggota berhasil ('+role+'). Mengetes baca satu dokumen toko…');
+        const selectedStore=[...remote].find(([key,value])=>value?.type==='store');
+        const localStore=pack(window.AreaApp.getData());
+        const existing=selectedStore||[...localStore].find(([key,value])=>value?.type==='store');
+        if(!existing){diagnosticInfo('✅ Login dan izin baca anggota berhasil. Belum ada dokumen toko untuk tes izin tulis.','success');return;}
+        const ref=doc(db,'workspaces',wid,'records',existing[0]);
+        const record=await waitLimit(getDocFromServer(ref),20000,'BACA DOKUMEN TOKO');
+        if(startVersion!==connectionVersion)return;
+        if(!record.exists()){diagnosticInfo('⚠️ Baca anggota berhasil tetapi dokumen toko belum ada di cloud. Tidak menguji tulis.','error');return;}
+        if(!confirm('Tes baca Firebase berhasil. Lanjut TES IZIN TULIS?\n\nTes hanya memperbarui field updatedAt pada 1 dokumen toko. QTY/target/HPP/data toko TIDAK diubah.\n\nJika server tidak merespons dalam 30 detik, tes diberi status BELUM TERKONFIRMASI, bukan gagal.')){
+          diagnosticInfo('✅ Tes baca sukses. Tes izin tulis dibatalkan oleh pengguna.','success');return;
+        }
+        diagnosticInfo('⏳ Tes 3/3: mengirim pembaruan metadata kecil ke Firestore (maksimal 30 detik)…');
+        const write=updateDoc(ref,{updatedAt:serverTimestamp()});
+        try{
+          await waitLimit(write,30000,'TES TULIS');
+          if(startVersion!==connectionVersion)return;
+          diagnosticInfo('✅ Firestore BACA + TULIS berhasil. Izin dan jalur tulis untuk dokumen toko aktif. Jika masih ada konflik, gunakan Sinkronisasi Ulang Aman setelah backup.','success');
+        }catch(err){
+          const code=String(err.code||err.message||err);
+          if(code==='deadline-exceeded-local'){
+            diagnosticWriteUnknown=true;
+            diagnosticInfo('⏳ TES TULIS BELUM TERKONFIRMASI dalam 30 detik. Firebase dapat masih memproses permintaan metadata. Jangan ulangi, tutup, atau kirim data baru. Coba ganti jaringan setelah backup dan periksa kembali.','warning');
+            // Promise SDK tetap hidup; hasil belakangan tetap dapat dilaporkan.
+            write.then(()=>{diagnosticWriteUnknown=false;diagnosticInfo('✅ Tes tulis akhirnya dikonfirmasi Firestore. Jalur tulis kembali aktif.','success')},lateErr=>{diagnosticWriteUnknown=false;diagnosticInfo('❌ Firebase menolak tes tulis: '+String(lateErr.code||lateErr.message||lateErr),'error')});
+          }else{
+            diagnosticInfo('❌ TES TULIS DITOLAK: '+code+'. '+(/permission-denied|unauthenticated/i.test(code)?'Periksa Security Rules/role editor untuk path records.':'Periksa koneksi Firebase dan detail error.'),'error');
+          }
+        }
+      }catch(err){
+        if(startVersion!==connectionVersion)return;
+        const code=String(err.code||err.message||err);
+        diagnosticInfo('❌ TES BACA tidak berhasil: '+code+'. '+(code==='deadline-exceeded-local'?'Kemungkinan jalur Firestore terputus/terhalang walau internet HP terlihat aktif. Coba Wi-Fi atau jaringan lain.':/permission-denied|unauthenticated/i.test(code)?'Periksa login dan Firestore Security Rules.':'Periksa jaringan, konfigurasi Firebase dan izin.'),'error');
+      }finally{
+        diagnosticRunning=false;
+        if(startVersion===connectionVersion && !diagnosticWriteUnknown)diagnosticBtn.disabled=false;
+      }
+    });
     window.addEventListener('area:ui-changed',()=>planUISync());
 
     // Batch awal kecil agar progres pertama terlihat lebih cepat di jaringan seluler.
@@ -248,7 +326,7 @@ if (!valid) {
         else conflictBox.appendChild(status);
       }
       const head=els.dialog?.querySelector('.modal-head small');
-      if(head&&!head.textContent.includes('V18'))head.append(' • V18');
+      if(head&&!head.textContent.includes('V19'))head.append(' • V19');
       return{button,status};
     }
     const resyncControls=ensureResyncControls();
@@ -565,7 +643,8 @@ if (!valid) {
       els.progressHint.textContent = done ? '✓ Dikonfirmasi Firestore' :
         paused ? `${pending.toLocaleString('id-ID')} data menunggu online` :
         failed ? 'Akan dicoba ulang otomatis; lihat pesan error di atas' :
-        elapsed >= SLOW_BATCH_MS ? `⏳ Menunggu konfirmasi Firebase ${Math.floor(elapsed / 1000)} detik · cek koneksi/izin jika terus berhenti` :
+        elapsed >= 45000 ? `⚠️ Belum ada konfirmasi server selama ${Math.floor(elapsed/1000)} detik. Jangan unggah ulang; lakukan tes Firebase dan simpan backup.` :
+        elapsed >= SLOW_BATCH_MS ? `⏳ Menunggu server ${Math.floor(elapsed / 1000)} detik; jangan refresh sebelum backup` :
         `Sisa ${pending.toLocaleString('id-ID')} data · menunggu konfirmasi server`;
     }
 
@@ -661,7 +740,7 @@ if (!valid) {
         const total = syncProgress.confirmed + pending;
         const percent = total ? Math.floor(syncProgress.confirmed / total * 100) : 0;
         const elapsed = busy && batchStartedAt ? Date.now() - batchStartedAt : 0;
-        const waitNote = elapsed >= SLOW_BATCH_MS ? ` · Firebase belum merespons ${Math.floor(elapsed / 1000)} detik` : '';
+        const waitNote = elapsed >= 45000 ? ` · TERHENTI ${Math.floor(elapsed / 1000)} detik. Jangan kirim ulang sebelum verifikasi.` : elapsed>=SLOW_BATCH_MS? ` · Belum merespons ${Math.floor(elapsed/1000)} detik` : '';
         statusMsg(`⏳ Menyimpan perubahan ke cloud… ${percent}% (${syncProgress.confirmed}/${total} data)${waitNote}.`, 'warn', `Cloud: ${percent}%`);
         return;
       }
