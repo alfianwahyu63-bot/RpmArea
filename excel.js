@@ -21,9 +21,10 @@ function sval(v){if(v===null||v===undefined)return'';if(typeof v==='number')retu
 
 /* Format khusus file target area.xlsx:
  * TARGET PERTOKO: A=kode, B=nama; C/D=brand1 Qty/Net Sales; E/F=brand2 ...
- * LIST ITEM: A=PLU, B=BRAND, C=Deskripsi. Kolom D dst. bukan HPP.
+ * LIST ITEM: A=PLU, B=BRAND, C=Deskripsi, D=HPP (jika tersedia).
  * Target masing-masing toko = total target seluruh brand di sheet TARGET PERTOKO.
- * Satu katalog LIST ITEM disalin untuk setiap toko (masing-masing punya QTY dan HPP sendiri).
+ * Satu katalog LIST ITEM disalin untuk setiap toko; HPP dari Excel diisi otomatis
+ * untuk setiap PLU dan tetap bisa diedit per toko tanpa mengubah toko lain.
  */
 function parseAreaTargetWorkbook(sheets){
  const target=sheets.find(sh=>normalize(sh.name)==='TARGET PERTOKO'||normalize(sh.name)==='TARGET PER TOKO');
@@ -64,12 +65,15 @@ function parseAreaTargetWorkbook(sheets){
  }
  if(header>=0){const added=new Set();for(let i=header+1;i<list.rows.length;i++){
   const row=list.rows[i]||[],raw=row[hm.plu],plu=sval(raw).replace(/\.0+$/,'').trim(),brand=sval(row[hm.brand]),description=sval(row[hm.desc]);
+  // Angka HPP Excel boleh desimal; kosong berarti pertahankan HPP lama pada impor ulang.
+  const rawHpp=hm.hpp===undefined?null:row[hm.hpp];
+  const hpp=(rawHpp===null||rawHpp===undefined||String(rawHpp).trim()==='')?null:nval(rawHpp);
   if(!plu||!brand||!description||/^#(N\/A|VALUE|REF|DIV)/i.test(plu)||added.has(plu))continue;
-  added.add(plu);catalog.push({plu,brand,description,hpp:0});
+  added.add(plu);catalog.push({plu,brand,description,hpp});
  }}
  }
  const items=[];for(const store of stores)for(const itm of catalog)items.push({code:store.code,...itm});
- return {stores,items,sheets:[target.name,...(list?[list.name]:[])],format:'area-brand-matrix',brands:cols.map(c=>c.brand),catalogCount:catalog.length};
+ return {stores,items,sheets:[target.name,...(list?[list.name]:[])],format:'area-brand-matrix',brands:cols.map(c=>c.brand),catalogCount:catalog.length,hppCount:catalog.filter(x=>x.hpp!==null).length};
 }
 
 function parseSheets(sheets){const area=parseAreaTargetWorkbook(sheets);if(area)return area;const stores=new Map(),items=new Map(),used=[];for(const sh of sheets){const rows=sh.rows||[];let header=-1,map=null;for(let i=0;i<Math.min(rows.length,80);i++){const m=headMap(rows[i]||[]);if(m.code!==undefined&&((m.name!==undefined&&m.qty!==undefined&&m.ns!==undefined)||(m.plu!==undefined&&m.desc!==undefined)||(m.name!==undefined&&m.plu!==undefined))){header=i;map=m;break}}if(header===-1)continue;used.push(sh.name);let qtyRows=0,itemRows=0;for(let ri=header+1;ri<rows.length;ri++){const r=rows[ri]||[],code=sval(r[map.code]);if(!code||code.length>50||normalize(code).startsWith('TOTAL'))continue;const name=map.name===undefined?'':sval(r[map.name]);const hasTarget=(map.qty!==undefined||map.ns!==undefined),hasPlu=map.plu!==undefined&&map.desc!==undefined;let existing=stores.get(code);
@@ -77,7 +81,7 @@ if(!existing)existing={code,name:name||code,targetQty:0,targetNS:0,_hasTargets:f
 if(hasTarget){const q=map.qty===undefined?undefined:r[map.qty],nn=map.ns===undefined?undefined:r[map.ns];const containsValue=(v)=>v!==undefined&&v!==null&&String(v).trim()!=='';
 if(containsValue(q)||containsValue(nn)){if(!existing._hasTargets){existing.targetQty=nval(q);existing.targetNS=nval(nn);existing._hasTargets=true;qtyRows++}else if(sh.name.toLowerCase().includes('master')){existing.targetQty=nval(q);existing.targetNS=nval(nn)}}}
 stores.set(code,existing);
-if(hasPlu){const plu=sval(r[map.plu]),desc=sval(r[map.desc]);if(plu&&desc&&!/^#(N\/A|VALUE|REF)/.test(plu)){const key=code+'\u0001'+plu;items.set(key,{code,plu,description:desc,brand:map.brand===undefined?'':sval(r[map.brand]),hpp:map.hpp===undefined?0:nval(r[map.hpp])});itemRows++}}
+if(hasPlu){const plu=sval(r[map.plu]),desc=sval(r[map.desc]);if(plu&&desc&&!/^#(N\/A|VALUE|REF)/.test(plu)){const key=code+'\u0001'+plu;items.set(key,{code,plu,description:desc,brand:map.brand===undefined?'':sval(r[map.brand]),hpp:map.hpp===undefined||r[map.hpp]===undefined||String(r[map.hpp]).trim()===''?null:nval(r[map.hpp])});itemRows++}}
 }}
 if(!stores.size)throw Error('Format belum dikenali. Untuk file area asli gunakan sheet TARGET PERTOKO dan LIST ITEM; atau gunakan template MASTER TOKO dan LIST PLU.');
 return {stores:[...stores.values()].map(({_hasTargets,...s})=>s),items:[...items.values()],sheets:used}}
