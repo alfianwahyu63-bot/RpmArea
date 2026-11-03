@@ -221,8 +221,39 @@ if (!valid) {
     const resumeSafe = $('#cloudResumeSafe');
     const restoreQty = $('#cloudRestoreQty');
     const repairMessage = $('#cloudRepairMessage');
-    const resyncButton = $('#cloudResyncNow');
-    const resyncStatus = $('#cloudResyncStatus');
+    // V18 fallback: if an older index.html remains cached but V18 cloud.js
+    // loaded successfully, add the primary action before the backup buttons.
+    // Never submit/overwrite automatically; this only creates the UI control.
+    function ensureResyncControls(){
+      let button=document.getElementById('cloudResyncNow');
+      if(!button && conflictBox){
+        button=document.createElement('button');
+        button.id='cloudResyncNow';
+        button.type='button';
+        button.className='btn primary cloud-resync-main';
+        button.textContent='🔄 SINKRONISASI ULANG AMAN';
+        const actions=conflictBox.querySelector('.inline-actions');
+        if(actions)conflictBox.insertBefore(button,actions);
+        else conflictBox.appendChild(button);
+      }
+      let status=document.getElementById('cloudResyncStatus');
+      if(!status && conflictBox){
+        status=document.createElement('p');
+        status.id='cloudResyncStatus';
+        status.className='cloud-resync-message';
+        status.setAttribute('role','status');
+        status.setAttribute('aria-live','polite');
+        status.textContent='Periksa ulang Cloud dan gabungkan hanya perubahan yang aman setelah persetujuan.';
+        if(button)button.insertAdjacentElement('afterend',status);
+        else conflictBox.appendChild(status);
+      }
+      const head=els.dialog?.querySelector('.modal-head small');
+      if(head&&!head.textContent.includes('V18'))head.append(' • V18');
+      return{button,status};
+    }
+    const resyncControls=ensureResyncControls();
+    const resyncButton = resyncControls.button;
+    const resyncStatus = resyncControls.status;
     let repairing = false;
     let reconciling = false;
     function resyncMessage(message,state='pending'){
@@ -304,6 +335,9 @@ if (!valid) {
           return;
         }
         blockSync(before,remote,'Hasil pemeriksaan ulang');
+        // Needed if browser has an older HTML that omitted the safe-merge script.
+        if(!window.RpmSafeMerge)await import('./safe-merge.js?v=18');
+        if(version!==connectionVersion)return;
         const plan=window.RpmSafeMerge?.build(before,remote);
         if(!plan?.ok){
           const summary=plan?.reason||'Modul pemeriksaan perbedaan belum siap';
@@ -389,7 +423,7 @@ if (!valid) {
         reconciling=false;repairing=false;
         if(version===connectionVersion){
           resyncButton.disabled=false;
-          resyncButton.textContent='🔄 Sinkronisasi Ulang Aman';
+          resyncButton.textContent='🔄 SINKRONISASI ULANG AMAN';
           if(syncBlocked)showRepairOption(pack(window.AreaApp.getData()),remote);
         }
       }

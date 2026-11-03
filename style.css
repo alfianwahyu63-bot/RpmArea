@@ -420,3 +420,10 @@ body{color:var(--ink)}
 
 /* V17: one-tap, explicitly approved reconciliation on the Cloud screen */
 .cloud-resync-actions{gap:10px;align-items:stretch;flex-wrap:wrap}.cloud-resync-actions #cloudResyncNow{flex:1 1 100%;min-height:49px;font-weight:900;background:linear-gradient(110deg,#a8fa6e,#28c9b9);color:#0c2025;border:0}.cloud-resync-message{font-size:12px;line-height:1.6;padding:12px;border:1px solid rgba(149,236,205,.21);background:rgba(15,32,35,.45);border-radius:12px;color:var(--muted);overflow-wrap:anywhere}.cloud-resync-message[data-state="error"]{color:#ffaeb5;background:rgba(255,85,100,.09)}.cloud-resync-message[data-state="success"]{color:#a5f3bc;background:rgba(51,210,112,.09)}.cloud-resync-actions button:disabled{opacity:.62;cursor:progress}
+/* V18: action is explicitly a full-width block above backup controls. */
+.rpm-build-pill{display:inline-block;background:#b9ff7d;color:#18321f;padding:3px 8px;border-radius:999px;font-weight:950;letter-spacing:.07em;margin-left:6px;font-size:11px}
+.cloud-conflict #cloudResyncNow.cloud-resync-main{display:flex!important;visibility:visible!important;opacity:1;width:100%;min-height:58px;height:auto;padding:14px 18px;margin:16px 0 12px;border-radius:15px;border:2px solid rgba(255,255,255,.23);background:linear-gradient(110deg,#a6f778,#1fc6bb);color:#112326;font-weight:950;font-size:14px;line-height:1.3;white-space:normal;text-align:center;box-shadow:0 9px 24px rgba(101,255,170,.19)}
+.cloud-conflict #cloudResyncNow:disabled{opacity:.65!important;cursor:wait}
+.cloud-resync-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start}
+.cloud-conflict .cloud-resync-message{display:block;margin:11px 0 14px;color:#d0e6df}
+@media(max-width:640px){.cloud-conflict #cloudResyncNow.cloud-resync-main{font-size:13px}.cloud-conflict .cloud-resync-actions .btn{flex:1 1 42%;white-space:normal;line-height:1.2}}
