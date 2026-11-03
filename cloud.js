@@ -107,9 +107,14 @@ if (!valid) {
     let retryTimer = null;
     let connectionVersion = 0;
 
-    // 80 dokumen per commit: progress dapat bergerak bertahap pada unggahan besar.
-    // Setiap tahap dihitung sukses HANYA setelah batch.commit() berhasil.
-    const CHUNK_SIZE = 80;
+    // Batch awal kecil agar progres pertama terlihat lebih cepat di jaringan seluler.
+    // Batch selanjutnya lebih besar agar unggahan ratusan PLU tidak memerlukan
+    // terlalu banyak round-trip. Angka tetap dihitung setelah commit dikonfirmasi.
+    const FIRST_CHUNK_SIZE = 25;
+    const CHUNK_SIZE = 160;
+    const SLOW_BATCH_MS = 20000;
+    let batchStartedAt = 0;
+    let waitTimer = null;
     let syncProgress = { active: false, complete: false, confirmed: 0, mode: 'auto', error: false };
 
     const strip = value => {
@@ -146,10 +151,12 @@ if (!valid) {
         failed ? 'Penyimpanan tertunda' :
         syncProgress.mode === 'upload' ? 'Mengunggah data awal area' : 'Menyimpan perubahan area';
       els.progressCount.textContent = `${syncProgress.confirmed.toLocaleString('id-ID')} / ${total.toLocaleString('id-ID')} data berhasil`;
+      const elapsed = busy && batchStartedAt ? Date.now() - batchStartedAt : 0;
       els.progressHint.textContent = done ? '✓ Dikonfirmasi Firestore' :
         paused ? `${pending.toLocaleString('id-ID')} data menunggu online` :
-        failed ? 'Akan dicoba ulang otomatis' :
-        `Sisa ${pending.toLocaleString('id-ID')} data`;
+        failed ? 'Akan dicoba ulang otomatis; lihat pesan error di atas' :
+        elapsed >= SLOW_BATCH_MS ? `⏳ Menunggu konfirmasi Firebase ${Math.floor(elapsed / 1000)} detik · cek koneksi/izin jika terus berhenti` :
+        `Sisa ${pending.toLocaleString('id-ID')} data · menunggu konfirmasi server`;
     }
 
     function beginProgress(mode = 'auto') {
@@ -193,6 +200,9 @@ if (!valid) {
       if (unsub) { unsub(); unsub = null; }
       clearTimeout(flushTimer);
       clearTimeout(retryTimer);
+      clearInterval(waitTimer);
+      waitTimer = null;
+      batchStartedAt = 0;
       ready = false;
       editing = false;
       first = false;
@@ -226,7 +236,9 @@ if (!valid) {
       if (pending || busy) {
         const total = syncProgress.confirmed + pending;
         const percent = total ? Math.floor(syncProgress.confirmed / total * 100) : 0;
-        statusMsg(`⏳ Menyimpan perubahan ke cloud… ${percent}% (${syncProgress.confirmed}/${total} data).`, 'warn', `Cloud: ${percent}%`);
+        const elapsed = busy && batchStartedAt ? Date.now() - batchStartedAt : 0;
+        const waitNote = elapsed >= SLOW_BATCH_MS ? ` · Firebase belum merespons ${Math.floor(elapsed / 1000)} detik` : '';
+        statusMsg(`⏳ Menyimpan perubahan ke cloud… ${percent}% (${syncProgress.confirmed}/${total} data)${waitNote}.`, 'warn', `Cloud: ${percent}%`);
         return;
       }
       statusMsg('✅ Cloud aktif · semua perubahan sudah tersimpan dan tersedia untuk anggota area.', 'ok');
@@ -249,13 +261,24 @@ if (!valid) {
       }
       const version = connectionVersion;
       busy = true;
-      const items = [...queued.entries()].slice(0, CHUNK_SIZE);
+      // Unggahan pertama mengirim 25 dokumen dahulu, sisanya per 160 dokumen.
+      // Ini mengurangi waktu menunggu tampilan 0% saat koneksi cukup lambat.
+      const limit = syncProgress.confirmed === 0 ? FIRST_CHUNK_SIZE : CHUNK_SIZE;
+      const items = [...queued.entries()].slice(0, limit);
       for (const [key, value] of items) {
         queued.delete(key);
         inflight.set(key, value);
       }
       beginProgress();
       displayStatus();
+
+      batchStartedAt = Date.now();
+      clearInterval(waitTimer);
+      waitTimer = setInterval(() => {
+        if (version !== connectionVersion || !busy) return;
+        // Tidak menebak persentase: hanya memperbarui waktu tunggu dan status.
+        if (Date.now() - batchStartedAt >= SLOW_BATCH_MS) displayStatus();
+      }, 2500);
 
       const batch = writeBatch(db);
       for (const [id, value] of items) {
@@ -267,6 +290,9 @@ if (!valid) {
       try {
         await batch.commit();
         if (version !== connectionVersion) return;
+        clearInterval(waitTimer);
+        waitTimer = null;
+        batchStartedAt = 0;
         // Firestore sudah mengonfirmasi commit batch ini (bukan sekadar antrean lokal).
         for (const [id] of items) inflight.delete(id);
         syncProgress.confirmed += items.length;
@@ -282,6 +308,9 @@ if (!valid) {
         }
       } catch (err) {
         if (version !== connectionVersion) return;
+        clearInterval(waitTimer);
+        waitTimer = null;
+        batchStartedAt = 0;
         for (const [id, value] of items) {
           inflight.delete(id);
           if (!queued.has(id)) queued.set(id, value);
@@ -330,6 +359,13 @@ if (!valid) {
           if (version !== connectionVersion) return;
           if (!first && snap.metadata.fromCache) {
             statusMsg('⏳ Menunggu jawaban dari server…');
+            return;
+          }
+          // SDK dapat mengirim event hanya untuk metadata cache/write pending.
+          // Hindari rebuild dashboard ratusan PLU jika tidak ada data yang berubah.
+          if (first && typeof snap.docChanges === 'function' &&
+              !snap.docChanges({ includeMetadataChanges: false }).length) {
+            displayStatus();
             return;
           }
           remote = new Map(snap.docs.map(record => [record.id, strip(record.data())]));
