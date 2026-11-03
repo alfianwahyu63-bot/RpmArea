@@ -1,4 +1,4 @@
-/* RpmArea V20 · sinkronisasi lintas HP via Firestore REST HTTPS.
+/* RpmArea V21 · sinkronisasi lintas HP via Firestore REST HTTPS + delta polling hemat kuota.
    Tidak menggunakan antrean penulisan SDK WebChannel yang pernah tertahan >900 detik.
    Setiap perubahan data memiliki precondition updateTime dan diverifikasi dengan membaca server.
    Bila request timeout, hasil TIDAK dianggap gagal atau berhasil: cek server kembali, tanpa retry tulis otomatis.
@@ -31,6 +31,7 @@ function failText(err){const code=String(err?.code||'ERROR'),detail=String(err?.
  if(err?.http===403||/PERMISSION_DENIED/i.test(code))return `DITOLAK IZIN (HTTP 403). Periksa Firestore Rules untuk workspaces/${cfg.workspaceId}/records/{id} dan peran editor. Detail: ${detail}`;
  if(err?.http===401||/UNAUTHENTICATED/i.test(code))return 'Sesi Firebase tidak berlaku. Login kembali. '+detail;
  if(code==='TIMEOUT_UNKNOWN')return 'BELUM TERKONFIRMASI: '+detail+' Jangan kirim ulang sebelum tekan Cek Cloud Sekarang.';
+ if(err?.http===429||code==='RESOURCE_EXHAUSTED')return 'KUOTA FIRESTORE HABIS (HTTP 429). Penulisan dan pembacaan tertahan sampai kuota pulih atau billing ditingkatkan. Backup lokal, hentikan versi lama yang polling penuh, dan periksa Firestore > Usage. '+detail;
  if(code==='FAILED_PRECONDITION'||err?.http===409||err?.http===412)return 'Cloud berubah sejak dibaca. Tidak ada data ditimpa; sinkronisasi dihentikan. '+detail;
  return `${code}${err?.http?' (HTTP '+err.http+')':''}: ${detail}`;}
 const valid=transport&&typeof cfg.apiKey==='string'&&cfg.apiKey.length>16&&cfg.projectId&&cfg.appId&&cfg.workspaceId;
@@ -83,6 +84,8 @@ try{
  }
  let serverDocs=new Map(),serverValues=new Map(),connected=false,active=false,blocked=false,writing=false,reconciling=false,loading=false,uncertain=false;
  let version=0,debounce=null,uiDebounce=null,pollTimer=null,uiWriting=false,blockReason='',lastResult='',lastUIRevision='';
+ let quotaPaused=false,lastDeltaAt=0;
+ const POLL_MS=90000,OVERLAP_MS=150000; // REST delta only: 1 inexpensive query every 90s when unchanged.
  const CONFIRMED_KEY='rpmarea_confirmed_cloud_v20';
  function rememberConfirmed(){try{localStorage.setItem(CONFIRMED_KEY,JSON.stringify([...serverValues]))}catch(err){console.warn('Tidak dapat menyimpan penanda cloud; backup HP tetap terpisah.',err)}}
  function lastConfirmed(){try{const raw=JSON.parse(localStorage.getItem(CONFIRMED_KEY)||'null');return Array.isArray(raw)?new Map(raw):null}catch{return null}}
@@ -111,6 +114,7 @@ try{
   status(msg,'ok','Cloud: Aktif');
  }
  function onError(err,heading='Sinkronisasi gagal'){
+  if(err?.http===429||err?.code==='RESOURCE_EXHAUSTED'){quotaPaused=true;active=false;clearInterval(pollTimer);pollTimer=null;clearTimeout(debounce);clearTimeout(uiDebounce);progress();uiNote('⛔ Kuota Firestore habis (HTTP 429). Pengaturan tetap tersimpan lokal, belum bisa dikirim.','error');}
   const message=heading+': '+failText(err);
   status('❌ '+message,'error','Cloud: Gagal');note(message,'error');diagNote(message,'error');
  }
@@ -120,12 +124,16 @@ try{
   if(doc?.settings&&doc?.revision&&doc.revision!==lastUIRevision){window.AreaApp.applySharedUI({theme:doc.theme,settings:doc.settings});lastUIRevision=doc.revision;uiNote('✅ Tema dan tampilan diambil dari Cloud (berlaku semua HP).','saved')}
  }
  async function refresh(reason='poll'){
-  if(!connected||writing||reconciling||loading)return;
-  const tokenVersion=version;
+  if(!connected||writing||reconciling||loading||(reason==='poll'&&quotaPaused))return;
+  const tokenVersion=version,startedAt=Date.now();
   loading=true;
-  if(reason==='manual')status('🔍 Mengambil dokumen langsung via HTTPS dari server…','warn','Cloud: Cek');
+  if(reason==='manual')status('🔍 Mengecek ulang dokumen Cloud via HTTPS…','warn','Cloud: Cek');
   try{
-   const latest=await rest.listRecords();if(tokenVersion!==version)return;
+   // Poll reads only changed docs; manual check can still perform a full audit on demand.
+   const delta=reason==='poll'?await rest.changesSince(new Date(Math.max(0,lastDeltaAt-OVERLAP_MS)).toISOString()):null;
+   const latest=reason==='poll'?new Map([...serverDocs,...delta]):await rest.listRecords();if(tokenVersion!==version)return;
+   lastDeltaAt=startedAt;quotaPaused=false;
+   if(reason==='poll'&&!delta.size)return; // No changes means zero large collection scans.
    await loadSharedUi(latest);
    const newValues=valueMap(latest),local=modelMap(),old=serverValues;
    serverDocs=latest;serverValues=newValues;
@@ -144,11 +152,11 @@ try{
   }catch(err){if(tokenVersion===version)onError(err,'Cek Cloud tidak selesai')}
   finally{loading=false}
  }
- function scheduleUpload(){clearTimeout(debounce);if(!connected||!active||writing||blocked||uncertain)return;debounce=setTimeout(()=>sendPending().catch(err=>onError(err)),900)}
+ function scheduleUpload(){clearTimeout(debounce);if(!connected||!active||writing||blocked||uncertain||quotaPaused)return;debounce=setTimeout(()=>sendPending().catch(err=>onError(err)),900)}
  // Standard autosync only writes changed rows, after verifying the live server contents.
  // It will NOT silently delete a store/PLU or overwrite another HP's update.
  async function sendPending(){
-  if(!connected||!active||writing||blocked||uncertain||loading||reconciling)return;
+  if(!connected||!active||writing||blocked||uncertain||loading||reconciling||quotaPaused)return;
   if(!navigator.onLine){status('Offline. Input tersimpan di HP, belum di Cloud.','warn','Cloud: Offline');return}
   const local=modelMap();const base=serverValues;
   const d=compare(local,base);if(!d.any)return;
@@ -158,24 +166,27 @@ try{
   setBusy(true);progress(proposed.length,0);
   let sent=0;
   try{
-   const latest=await rest.listRecords();const live=valueMap(latest);
+   // Only GET the documents being changed. Previously two full 864-document scans per edit.
+   const latestById=await rest.getRecords(proposed.map(([id])=>id));
+   const live=new Map(base);for(const [id,doc] of latestById){if(doc)live.set(id,doc.value);else live.delete(id)}
    for(const [id] of proposed){if(!same(live.get(id),base.get(id))&&!same(live.get(id),local.get(id))){displayConflict(local,live,'Dokumen '+id+' berubah di HP lain sebelum penulisan');return}}
    const remaining=proposed.filter(([id,value])=>!same(live.get(id),value));
-   if(!remaining.length){serverDocs=latest;serverValues=live;progress(proposed.length,proposed.length);setActive();return}
+   if(!remaining.length){for(const [id,doc] of latestById){if(doc)serverDocs.set(id,doc);else serverDocs.delete(id)}serverValues=live;progress(proposed.length,proposed.length);setActive();return}
    // No deletes, all writes guarded by Firestore updateTime; one 403 is visible immediately.
    for(let offset=0;offset<remaining.length;offset+=25){
     const chunk=remaining.slice(offset,offset+25);
-    await rest.commit(chunk.map(([id,value])=>({id,value,previous:latest.get(id),uid:auth.currentUser.uid})),{timeout:25000});
+    await rest.commit(chunk.map(([id,value])=>({id,value,previous:latestById.get(id),uid:auth.currentUser.uid})),{timeout:25000});
     sent+=chunk.length;progress(proposed.length,Math.min(proposed.length-1,sent+proposed.length-remaining.length),'save','Menunggu verifikasi hasil baca balik dari server…');
    }
-   const verified=await rest.listRecords();const verifiedValues=valueMap(verified);
-   const now=modelMap();const check=compare(now,verifiedValues);
-   serverDocs=verified;serverValues=verifiedValues;
-   if(check.any){
-    if(compare(now,local).any && !compare(local,verifiedValues).any){setActive('✅ Perubahan pertama tersimpan. Menyiapkan input terbaru yang dibuat selama upload.');scheduleUpload();return}
-    displayConflict(now,verifiedValues,'Upload selesai tetapi server dan HP berbeda saat verifikasi');return
+   // Verify only changed documents, then merge into cached server snapshot.
+   const verifiedById=await rest.getRecords(remaining.map(([id])=>id));
+   for(const [id,value] of remaining){const doc=verifiedById.get(id);if(!doc||!same(doc.value,value))throw Error('Konfirmasi server berbeda untuk '+id+'. Jangan menimpa data lain.');serverDocs.set(id,doc);serverValues.set(id,doc.value)}
+   const now=modelMap();
+   if(compare(now,serverValues).any){
+    if(compare(now,local).any){active=true;blocked=false;progress(proposed.length,proposed.length);status('✅ Input sebelumnya sudah terverifikasi. Menyiapkan input terbaru…','warn','Cloud: Pending');scheduleUpload();return}
+    displayConflict(now,serverValues,'Upload diverifikasi per dokumen tetapi masih ada perbedaan lokal');return;
    }
-   progress(proposed.length,proposed.length);setActive('✅ '+remaining.length+' dokumen tersimpan dan telah diverifikasi di Firebase. HP lain akan mengambil pembaruan.');
+   progress(proposed.length,proposed.length);setActive('✅ '+remaining.length+' dokumen tersimpan dan diverifikasi. Perubahan akan dibaca HP lain saat sinkron delta.');
   }catch(err){
    uncertain=err?.code==='TIMEOUT_UNKNOWN';
    active=false;blocked=true;el.conflict.hidden=false;
@@ -185,7 +196,7 @@ try{
   }finally{setBusy(false);if(!blocked&&!uncertain&&active&&compare(modelMap(),serverValues).any)scheduleUpload()}
  }
  async function publishUI(){
-  const pending=window.AreaApp.getPendingSharedUI();if(!pending||!connected||uiWriting)return;
+  const pending=window.AreaApp.getPendingSharedUI();if(!pending||!connected||uiWriting||quotaPaused)return;
   if(!navigator.onLine){uiNote('📴 Tampilan tersimpan di HP. Belum terkirim karena offline.','warning');return}
   uiWriting=true;uiNote('⏳ Mengirim 1 dokumen pengaturan lewat HTTPS langsung…');
   try{
@@ -196,12 +207,12 @@ try{
    serverDocs.set('area_config',verify);
    window.AreaApp.confirmSharedUI(pending.revision);lastUIRevision=pending.revision;
    uiNote('✅ Pengaturan benar-benar tersimpan di Firebase. HP lain menerima dalam ±20 detik.','saved');
-  }catch(err){uiNote('❌ Pengaturan belum tersimpan di Cloud: '+failText(err),'error')}
+  }catch(err){if(err?.http===429||err?.code==='RESOURCE_EXHAUSTED')onError(err,'Kuota Firestore pengaturan');uiNote('❌ Pengaturan belum tersimpan di Cloud: '+failText(err),'error')}
   finally{uiWriting=false; if(window.AreaApp.getPendingSharedUI()&&window.AreaApp.getPendingSharedUI().revision!==pending.revision)scheduleUI()}
  }
- function scheduleUI(){clearTimeout(uiDebounce);if(connected)uiDebounce=setTimeout(publishUI,1200)}
- function clearConnection(){++version;connected=false;active=false;blocked=false;uncertain=false;loading=false;writing=false;reconciling=false;clearTimeout(debounce);clearTimeout(uiDebounce);clearInterval(pollTimer);serverDocs=new Map();serverValues=new Map();progress();el.conflict.hidden=true;el.upload.hidden=true;el.logged.hidden=true;el.form.hidden=false}
- async function start(user){clearConnection();const current=version;
+ function scheduleUI(){clearTimeout(uiDebounce);if(connected&&!quotaPaused)uiDebounce=setTimeout(publishUI,1200)}
+ function clearConnection(){++version;connected=false;active=false;blocked=false;uncertain=false;loading=false;writing=false;reconciling=false;quotaPaused=false;lastDeltaAt=0;clearTimeout(debounce);clearTimeout(uiDebounce);clearInterval(pollTimer);serverDocs=new Map();serverValues=new Map();progress();el.conflict.hidden=true;el.upload.hidden=true;el.logged.hidden=true;el.form.hidden=false}
+ async function start(user){clearConnection();const current=version;lastDeltaAt=Date.now();
   el.logged.hidden=false;el.form.hidden=true;el.user.textContent='👤 '+(user.email||'Pengguna')+' · Area: '+cfg.workspaceId;
   status('🔐 Login berhasil. Memeriksa izin Firebase via HTTPS…','warn','Cloud: Periksa');
   try{
@@ -227,11 +238,12 @@ try{
     }else displayConflict(local,serverValues,'Data awal berbeda');
    }
    else setActive();
-   pollTimer=setInterval(()=>refresh(),20000);
-  }catch(err){if(current===version)onError(err,'Tidak dapat menghubungkan Firestore')}
+   // V21: small incremental query, never a 864-document full scan every 20 seconds.
+   pollTimer=setInterval(()=>refresh(),POLL_MS);
+  }catch(err){if(current===version){connected=false;onError(err,'Tidak dapat menghubungkan Firestore')}}
  }
  async function reconcile(){
-  if(!connected||writing||reconciling){note('Tidak bisa memeriksa saat proses lain berjalan.','error');return}
+  if(!connected||writing||reconciling||quotaPaused){note('Tidak bisa sinkron saat proses lain berjalan atau kuota habis. Klik Cek Cloud setelah kuota pulih.','error');return}
   reconciling=true;disableActions(true);
   status('🔍 Memeriksa semua dokumen langsung dari server…','warn','Cloud: Cek');
   try{
@@ -270,19 +282,21 @@ try{
   try{
    const member=await rest.getMember(auth.currentUser.uid);
    if(!member?.value)throw Error('Tidak ada dokumen anggota workspace.');
-   diagNote('✅ Anggota workspace bisa dibaca. 2/3: membaca dokumen cloud…');
-   const all=await rest.listRecords();const n=[...all.values()].filter(x=>x.value?.type==='item').length;
-   diagNote('✅ Baca Cloud berhasil ('+n+' PLU). 3/3: menyiapkan tes tulis.');
-   const first=[...all].find(([,record])=>record.value?.type==='store');
+   diagNote('✅ Anggota workspace bisa dibaca. 2/3: membaca satu dokumen toko…');
+   const first=[...serverDocs].find(([,record])=>record.value?.type==='store');
+   if(!first){diagNote('Tidak ada snapshot toko. Klik Cek Cloud setelah kuota pulih.','error');return}
+   const preview=await rest.getRecord(first[0]);
+   if(!preview)throw Error('Dokumen toko yang sebelumnya ada tidak ditemukan.');
+   diagNote('✅ Baca satu toko berhasil. 3/3: tes tulis metadata.');
    if(!first){diagNote('✅ Tes baca berhasil. Tidak ada toko untuk tes tulis.','success');return}
    if(!confirm('Tes baca HTTPS berhasil. Coba TES TULIS METADATA Firestore?\n\nHanya memperbarui field waktu pada satu dokumen toko, tanpa mengubah QTY, target, PLU, atau HPP.')){diagNote('✅ Tes baca berhasil. Tes tulis dibatalkan.','success');return}
-   const [id,doc]=first;
+   const [id]=first,doc=preview;
    diagNote('⏳ Mengirim permintaan tulis langsung ke Firestore (maksimal 25 detik)…');
    await rest.commit([{id,value:doc.value,previous:doc,uid:auth.currentUser.uid}],{timeout:25000});
    const verification=await rest.getRecord(id);
    if(!verification||!same(verification.value,doc.value))throw Error('Hasil tes tulis tidak cocok dengan data awal.');
    diagNote('✅ HTTPS BACA + TULIS BERHASIL. Security Rules menerima penulisan toko, dan data terkonfirmasi di server.','success');
-  }catch(err){diagNote('❌ '+failText(err),'error')}
+  }catch(err){onError(err,'Tes Firebase gagal');diagNote('❌ '+failText(err),'error')}
   finally{el.diag.disabled=false}
  }
  // Events
@@ -292,7 +306,7 @@ try{
  el.restore?.addEventListener('click',reconcile);
  el.resume?.addEventListener('click',reconcile);
  el.diag?.addEventListener('click',diagnostic);
- el.checkNow?.addEventListener('click',()=>refresh('manual'));
+ el.checkNow?.addEventListener('click',()=>{if(!auth.currentUser)return;quotaPaused=false;if(!connected)start(auth.currentUser);else refresh('manual')});
  el.upload?.addEventListener('click',async()=>{
   if(!connected||writing||reconciling||active)return;
   if(!confirm('Unggah data lokal ke Cloud yang KOSONG? Sebelum lanjut, backup data HP. Tidak menghapus apa pun.'))return;
@@ -309,7 +323,7 @@ try{
  });
  window.addEventListener('area:changed',()=>{if(connected){if(active)scheduleUpload();else status('💾 Input disimpan di HP, tetapi Cloud masih konflik. Gunakan Sinkronisasi Ulang Aman.','warn','Cloud: Tertahan')}});
  window.addEventListener('area:ui-changed',scheduleUI);
- window.addEventListener('online',()=>{if(connected)refresh('manual')});
+ window.addEventListener('online',()=>{if(connected&&!quotaPaused)refresh('poll')});
  el.form?.addEventListener('submit',async ev=>{ev.preventDefault();el.loginBtn.disabled=true;status('🔐 Login Firebase…');try{await signInWithEmailAndPassword(auth,el.email.value.trim(),el.password.value);el.password.value=''}catch(err){onError(err,'Login gagal')}finally{el.loginBtn.disabled=false}});
  el.logout?.addEventListener('click',async()=>{if(writing||reconciling||window.AreaApp.getPendingSharedUI()||uiWriting){alert('Masih ada perubahan yang belum tersimpan. Backup dahulu.');return}await signOut(auth)});
  onAuthStateChanged(auth,user=>{if(user)start(user);else{clearConnection();status('🔒 Mode lokal. Masuk Firebase agar input tersedia di semua HP.','warn','Cloud: Lokal');uiNote('☁ Login Firebase untuk menyamakan tema dan tampilan semua HP.')}});

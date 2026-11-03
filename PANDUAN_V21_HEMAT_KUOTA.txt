@@ -1,0 +1,33 @@
+RPM AREA V21 — HEMAT KUOTA FIRESTORE
+
+DIAGNOSIS TERVERIFIKASI DARI SCREENSHOT V20:
+  HTTP 429 RESOURCE_EXHAUSTED: Quota exceeded.
+  Bukan masalah lambatnya sinyal semata. Firestore membatasi operasi server.
+
+SUMBER PEMBOROSAN V20:
+  V20 melakukan listRecords() setiap 20 detik; 864 dokumen per cek.
+  864 x (86.400/20) = 3.732.480 pembacaan per HP jika aktif 24 jam.
+  Ini jauh di atas kuota baca gratis Firestore Standard 50.000/hari.
+
+PERBAIKAN V21:
+  - Setiap 90 detik hanya query dokumen dengan timestamp updatedAt terbaru.
+  - Ketika tidak ada data berubah, query mengonsumsi minimum 1 read (+ rules jika memanggil get()).
+  - Saat input QTY, pemeriksaan awal dan akhir hanya pada dokumen PLU yang berubah.
+  - Deteksi HTTP 429 menghentikan polling/retry otomatis sampai cek manual.
+  - Pertahankan pemeriksaan awal saat login dan tombol cek manual untuk pemeriksaan menyeluruh.
+  - Data lokal tidak otomatis dihapus/ditimpa untuk mengatasi konflik.
+
+SEBELUM UPDATE:
+  1. BACKUP JSON lokal dan Cloud dari perangkat yang masih memuat data.
+  2. Tutup versi lama pada HP lain supaya tidak terus menghabiskan quota.
+  3. Upload isi folder RpmArea-main V21 ke GitHub, tunggu selesai deploy.
+  4. Jangan hapus cache/data PWA atau uninstall.
+  5. Periksa Firebase Console > Firestore Database > Usage. Bila 429 karena kuota harian, tunggu reset sekitar tengah malam waktu Pasifik ATAU aktifkan Blaze dengan billing/alerts bila dibutuhkan.
+  6. Pastikan HP lain juga menjalankan V21.
+  7. Setelah kuota pulih, klik Cek Cloud Sekarang, selesaikan konflik aman jika masih ada, lalu coba satu input QTY dan periksa HP kedua.
+
+PENTING:
+  Tidak ada perubahan kode yang bisa menembus batas kuota Firestore saat sudah habis.
+  HTTP 429 juga bisa berarti batas kapasitas lain: verifikasi rincian kuota di console.
+  Query delta updatedAt mengandalkan adanya field updatedAt pada perubahan. Versi V20 menulis updatedAt server; HP yang belum diperbarui sebaiknya ditutup. Periksa ulang penuh secara manual jika ada aktivitas dari klien lama.
+  Backup JSON wajib disimpan hingga data 2 HP terverifikasi sama.
