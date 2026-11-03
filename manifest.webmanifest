@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "SalesPulse Area - Monitoring 12 Toko",
+  "short_name": "RPM Area",
+  "description": "Scorecard POINT QTY 50% + NS 50% untuk 12 toko",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fc",
+  "theme_color": "#101a34",
+  "icons": [
+    {"src":"./icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"./icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"./icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}
