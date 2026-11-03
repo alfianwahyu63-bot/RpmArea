@@ -1,4 +1,4 @@
-const CACHE='salespulse-area12-cache-v6-hpp-import';
+const CACHE='salespulse-area12-cache-v7-personalization';
 const PRECACHE=['./','./index.html','./style.css','./app.js','./excel.js','./vendor/jszip.min.js','./firebase-config.js','./cloud.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(async cache=>{const results=await Promise.allSettled(PRECACHE.map(async path=>{const response=await fetch(path,{cache:'reload'});if(response.ok)await cache.put(path,response)}));self.skipWaiting()}))});
 self.addEventListener('activate',e=>{e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()]))});
