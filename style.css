@@ -319,3 +319,37 @@ body{color:var(--ink)}
 .head-title h1,.panel-header h3,.surface>h3,.sectionhead h2{color:var(--ink)}
 .resume-table td{color:var(--ink)}
 .resume-table .resume-area td{color:var(--ink)!important}
+
+/* Cloud upload progress – percent only moves after a Firestore commit succeeds. */
+.cloud-progress{
+  margin:16px 0 12px;
+  padding:17px 16px 14px;
+  border-radius:16px;
+  border:1px solid color-mix(in srgb,var(--accent) 25%,var(--border));
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 9%,var(--card)),var(--card));
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 7%,transparent);
+}
+.cloud-progress[hidden]{display:none!important}
+.cloud-progress-heading,.cloud-progress-footer{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.cloud-progress-heading small{display:block;font-size:9px;font-weight:900;letter-spacing:1.3px;color:var(--muted);margin-bottom:6px}
+.cloud-progress-heading strong{display:block;font-size:14px;font-weight:900;line-height:1.35;color:var(--ink)}
+.cloud-progress-percent{font-size:26px;line-height:1;font-weight:950;letter-spacing:-1px;color:var(--accent);font-variant-numeric:tabular-nums}
+.cloud-progress-track{height:13px;margin:16px 0 10px;overflow:hidden;border-radius:20px;background:color-mix(in srgb,var(--accent) 12%,var(--canvas));box-shadow:inset 0 2px 4px #0002}
+.cloud-progress-fill{position:relative;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--accent2));box-shadow:0 0 12px color-mix(in srgb,var(--accent) 45%,transparent);transition:width .3s ease}
+.cloud-progress.is-saving .cloud-progress-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 20%,#ffffff77 50%,transparent 75%);animation:cloud-progress-shine 1.5s linear infinite}
+.cloud-progress.is-saving .cloud-progress-track:has(.cloud-progress-fill[style*="width: 0%"]){background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 14%,var(--canvas)) 20%,color-mix(in srgb,var(--accent) 28%,var(--canvas)) 50%,color-mix(in srgb,var(--accent) 14%,var(--canvas)) 80%);background-size:220% 100%;animation:cloud-progress-wait 1.5s ease infinite}
+@keyframes cloud-progress-shine{from{transform:translateX(-120%)}to{transform:translateX(120%)}}
+@keyframes cloud-progress-wait{from{background-position:100% 0}to{background-position:-100% 0}}
+.cloud-progress-footer{font-size:11px;font-weight:800;color:var(--muted);flex-wrap:wrap}
+.cloud-progress-footer span:first-child{color:var(--ink);font-variant-numeric:tabular-nums}
+.cloud-progress-note{color:var(--muted);font-size:10px;line-height:1.5;margin:10px 0 0}
+.cloud-progress.is-complete{border-color:color-mix(in srgb,var(--good) 45%,var(--border));background:linear-gradient(145deg,color-mix(in srgb,var(--good) 9%,var(--card)),var(--card))}
+.cloud-progress.is-complete .cloud-progress-percent{color:var(--good)}
+.cloud-progress.is-paused .cloud-progress-percent{color:var(--muted)}
+.cloud-progress.is-error{border-color:color-mix(in srgb,var(--bad) 45%,var(--border))}
+.cloud-progress.is-error .cloud-progress-percent{color:var(--bad)}
+@media(max-width:480px){.cloud-progress{padding:15px 13px}.cloud-progress-heading strong{font-size:13px}.cloud-progress-percent{font-size:24px}.cloud-progress-footer{font-size:10px;gap:7px}}
+@media(prefers-reduced-motion:reduce){.cloud-progress-fill{transition:none}.cloud-progress.is-saving .cloud-progress-fill::after,.cloud-progress.is-saving .cloud-progress-track{animation:none!important}}
+
+/* Respect native hidden property, including cloud upload button during a running sync. */
+[hidden]{display:none!important}
