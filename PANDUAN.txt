@@ -1,0 +1,21 @@
+PATCH CLOUD UNTUK SALESPULSE AREA 12 TOKO - RpmArea
+
+Paket ini memakai proyek Firebase yang sama dengan MonitoringRPM tetapi workspace yang TERPISAH agar data tidak bercampur.
+Firebase projectId: sales-rpm-fe422
+Area workspaceId: rpm-area-12
+
+1) Backup JSON data Area terlebih dahulu.
+2) Di repository GitHub RpmArea, pastikan index.html memang memuat:
+   <script src="./firebase-config.js"></script>
+   <script type="module" src="./cloud.js"></script>
+   Patch ini menggunakan struktur HTML SalesPulse Area V5. Bila file tersebut sudah sama, JANGAN perlu timpa file lain.
+3) Upload/replace firebase-config.js dan cloud.js dari ZIP di root repository (sejajar index.html), commit.
+4) Firebase Console: Project sales-rpm-fe422 > Firestore > Data.
+   Gunakan collection workspaces (yang sudah ada), buat Document ID rpm-area-12 (huruf kecil) dengan field name string 'RPM Area 12 Toko'.
+   Di dalam rpm-area-12 buat subcollection members. Buat dokumen dengan Document ID masing-masing UID yang ada di Authentication > Users. Field role (string): editor. Ulangi untuk anggota lain.
+   JANGAN memakai workspace rpm-team untuk aplikasi area karena bisa mencampur data.
+5) Pastikan Firestore Rules yang sudah dipublikasikan melindungi /workspaces/{workspaceId}/members/{uid} dan /workspaces/{workspaceId}/records/{id}; jangan pakai allow read,write:if true.
+6) Buka RpmArea melalui URL hosting yang sedang dipakai; pilih Cloud dan masuk pakai salah satu akun Authentication. Jika status member tidak ditemukan, periksa path tepat workspaces/rpm-area-12/members/UID.
+7) Jika status 'cloud kosong', backup JSON, lalu unggah data lokal hanya dari SATU HP. Setelah itu login di HP kedua dan uji satu perubahan QTY.
+
+Catatan: Kode saja tidak mengaktifkan database. Keanggotaan Firestore dan deployment tetap dilakukan oleh administrator. Jangan kirim password akun ke siapa pun.
