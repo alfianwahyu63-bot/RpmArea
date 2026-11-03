@@ -50,7 +50,7 @@ if (!valid) {
     const [
       { initializeApp },
       { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut },
-      { getFirestore, doc, collection, getDocFromServer, onSnapshot, writeBatch, setDoc, serverTimestamp }
+      { getFirestore, doc, collection, getDocFromServer, getDocsFromServer, onSnapshot, writeBatch, setDoc, runTransaction, serverTimestamp }
     ] = await Promise.all([
       import(`https://www.gstatic.com/firebasejs/${SDK}/firebase-app.js`),
       import(`https://www.gstatic.com/firebasejs/${SDK}/firebase-auth.js`),
@@ -219,11 +219,53 @@ if (!valid) {
     const exportLocal = $('#cloudExportLocal');
     const exportRemote = $('#cloudExportRemote');
     const resumeSafe = $('#cloudResumeSafe');
+    const restoreQty = $('#cloudRestoreQty');
+    const repairMessage = $('#cloudRepairMessage');
+    let repairing = false;
     function calculateConflict(localPack, cloudPack) {
       const missingLocal = [...localPack.keys()].filter(k => !cloudPack.has(k));
       const extraRemote = [...cloudPack.keys()].filter(k => !localPack.has(k));
       const changed = [...localPack].filter(([k, v]) => cloudPack.has(k) && norm(v) !== norm(cloudPack.get(k))).map(([k]) => k);
       return { missingLocal, extraRemote, changed, differs:missingLocal.length>0 || extraRemote.length>0 || changed.length>0 };
+    }
+    // Pemulihan terbatas: hanya perbedaan QTY ketika cloud=0, lokal>0.
+    // Semua field selain days wajib identik; tidak ada dokumen yang hilang/tambahan.
+    // Data 0 yang sengaja dikoreksi oleh toko lain tidak dapat dibedakan dari nilai
+    // yang belum terkirim, karena itu pemulihan SELALU memerlukan izin eksplisit.
+    function zeroFillPlan(localPack, cloudPack) {
+      const c=calculateConflict(localPack,cloudPack);
+      if(c.missingLocal.length||c.extraRemote.length||!c.changed.length)return null;
+      const changes=[];let qty=0;
+      for(const id of c.changed){
+        const local=localPack.get(id),server=cloudPack.get(id);
+        if(local?.type!=='item'||server?.type!=='item')return null;
+        const {days:ld,...localMetadata}=local;
+        const {days:sd,...serverMetadata}=server;
+        if(!same(localMetadata,serverMetadata))return null;
+        if(!Array.isArray(ld)||!Array.isArray(sd)||ld.length!==7||sd.length!==7)return null;
+        const days=[];
+        for(let i=0;i<7;i++){
+          const l=ld[i],s=sd[i];
+          if(!Number.isFinite(l)||!Number.isFinite(s)||l<0||s<0)return null;
+          if(s===l)continue;
+          if(!(s===0&&l>0))return null;
+          days.push(i);qty+=l;
+        }
+        if(!days.length)return null;
+        changes.push({id,local,server,days});
+      }
+      // Batas konservatif satu transaksi; kasus lebih besar harus ditinjau terpisah.
+      if(changes.length>200)return null;
+      return {changes,qty};
+    }
+    function showRepairOption(localPack, cloudPack){
+      const plan=zeroFillPlan(localPack,cloudPack);
+      restoreQty.hidden=!plan||repairing;
+      if(repairMessage){
+        repairMessage.hidden=!plan;
+        if(plan)repairMessage.textContent=`✅ Kandidat pemulihan aman ditemukan: ${plan.changes.length} PLU dengan total ${plan.qty} QTY yang ada di HP tetapi bernilai 0 di cloud. HANYA kolom QTY kosong di cloud yang akan dilengkapi. Backup kedua data, pastikan QTY HP benar, dan jangan input dari HP lain selama proses. Tidak otomatis dijalankan.`;
+      }
+      return plan;
     }
     function dataCounts(model){let stores=0,items=0;for(const week of Object.values(model.weeks||{})){for(const store of Object.values(week.stores||{})){stores++;items+=(store.items||[]).length}}return {stores,items}}
     function blockSync(localPack, cloudPack, label='Cloud dan perangkat berbeda'){
@@ -233,6 +275,7 @@ if (!valid) {
       conflictCanResume=c.missingLocal.length>0 && c.extraRemote.length===0 && c.changed.length===0;
       conflictBox.hidden=false;
       resumeSafe.hidden=!conflictCanResume;
+      const plan=showRepairOption(localPack,cloudPack);
       const counts=dataCounts(window.AreaApp.getData());
       conflictText.textContent=`${label}. Perangkat: ${counts.stores} toko, ${counts.items} PLU (${localPack.size} dokumen). Cloud: ${cloudPack.size} dokumen. Selisih lokal belum di cloud: ${c.missingLocal.length}; dokumen tambahan cloud: ${c.extraRemote.length}; berbeda: ${c.changed.length}. Tidak ada data ditimpa. Unduh backup sebelum memilih tindakan.`;
       statusMsg('🛑 Sinkronisasi DITAHAN demi keamanan data. Lokal ≠ Cloud. Buka Pusat Pemulihan atau unduh backup.', 'error', 'Cloud: Aman');
@@ -247,6 +290,70 @@ if (!valid) {
     }return state;}
     exportLocal.addEventListener('click',()=>window.AreaApp.downloadLocal());
     exportRemote.addEventListener('click',()=>saveJson('Backup_RpmArea_Cloud_'+new Date().toISOString().slice(0,10)+'.json',cloudState()));
+    restoreQty.addEventListener('click',async()=>{
+      if(!ready||!syncBlocked||repairing||!auth.currentUser||!navigator.onLine)return;
+      const before=pack(window.AreaApp.getData()),plan=zeroFillPlan(before,remote);
+      if(!plan){statusMsg('Pola perbedaan sudah berubah. Pemulihan otomatis DIBATALKAN; cek ulang backup.','error','Cloud: Aman');showRepairOption(before,remote);return;}
+      const approved=confirm(`PEMULIHAN TERBATAS DARI HP KE CLOUD\n\n${plan.changes.length} PLU dan ${plan.qty} QTY akan dipulihkan dari HP ini ke kolom QTY yang saat ini masih 0 di Firebase.\n\nPastikan sudah klik BACKUP LOKAL dan BACKUP CLOUD, semua QTY di HP benar, serta tidak ada toko lain yang sedang mengubah data.\n\nFirestore akan mengecek ulang dokumen; apabila berubah atau ada konflik selain QTY 0, proses dibatalkan tanpa mengubah data. Lanjutkan?`);
+      if(!approved)return;
+      const version=connectionVersion;
+      repairing=true;restoreQty.hidden=true;resumeSafe.hidden=true;
+      statusMsg('🔐 Memeriksa ulang '+plan.changes.length+' dokumen di Firebase sebelum pemulihan…','warn','Cloud: Periksa');
+      try{
+        // Cadangan perangkat dibuat sebelum memperbolehkan data berubah; tidak pernah
+        // menghapus dokumen cloud maupun nilai lain di selain kolom QTY yang nol.
+        if(window.AreaSafety && !(await window.AreaSafety.beforeRemote()))throw Error('Backup keselamatan gagal. Tidak ada perubahan dikirim.');
+        const latest=pack(window.AreaApp.getData());
+        if(calculateConflict(before,latest).differs)throw Error('Data HP berubah saat pemulihan. Coba lagi setelah backup.');
+        let updated=0;
+        await runTransaction(db,async tx=>{
+          updated=0; // Transaksi dapat diulang oleh Firestore jika ada dokumen berubah.
+          const snapshots=[];
+          // Firestore mengharuskan SEMUA pembacaan dilakukan sebelum menulis.
+          for(const change of plan.changes){
+            const ref=doc(db,'workspaces',wid,'records',change.id);
+            const snap=await tx.get(ref);
+            if(!snap.exists())throw Error('Dokumen cloud hilang: '+change.id);
+            const live=strip(snap.data());
+            // Cegah overwrite terhadap perubahan yang terjadi setelah layar konflik terbuka.
+            if(!same(live,change.server))throw Error('Cloud berubah pada '+change.local.code+' / '+change.local.plu+'. Pemulihan dihentikan, periksa backup.');
+            snapshots.push({ref,snap,change});
+          }
+          for(const {ref,snap,change} of snapshots){
+            const live=snap.data();
+            const merged=[...(live.days||[])];
+            for(const day of change.days)merged[day]=change.local.days[day];
+            tx.set(ref,{...live,days:merged,updatedAt:serverTimestamp(),editedBy:auth.currentUser.uid});
+            updated++;
+          }
+        },{maxAttempts:3});
+        if(version!==connectionVersion)return;
+        statusMsg('✅ Firebase mengonfirmasi '+updated+' PLU. Memverifikasi semua data…','warn','Cloud: Verifikasi');
+        const snap=await getDocsFromServer(collection(db,'workspaces',wid,'records'));
+        if(version!==connectionVersion)return;
+        remote=new Map(snap.docs.filter(d=>d.id!=='area_config').map(d=>[d.id,strip(d.data())]));
+        const localPack=pack(window.AreaApp.getData());
+        const check=calculateConflict(localPack,remote);
+        if(check.differs){blockSync(localPack,remote,'Pemulihan dikonfirmasi, namun masih ada perbedaan baru');return;}
+        syncBlocked=false;editing=true;stopRetry=false;first=true;
+        baseline=new Map(localPack);
+        conflictBox.hidden=true;restoreQty.hidden=true;
+        await receive();
+        statusMsg('✅ PEMULIHAN BERHASIL. '+updated+' PLU tersimpan dan '+remote.size+' dokumen data sekarang sama.','ok','Cloud: Aktif');
+        window.AreaApp?.notify('✓ QTY berhasil dipulihkan ke Firebase. Simpan backup terbaru.');
+      }catch(err){
+        const message=String(err.code||err.message||err);
+        statusMsg('⛔ Pemulihan dibatalkan: '+message+'. Tidak ada penghapusan data. Periksa backup; jika sebagian data sempat diubah, bandingkan ulang.','error','Cloud: Aman');
+        // Jika transaksi gagal, Firestore tidak menerapkan sebagian isinya.
+      }finally{
+        repairing=false;
+        if(version===connectionVersion){
+          const current=pack(window.AreaApp.getData());
+          if(syncBlocked)showRepairOption(current,remote);
+        }
+      }
+    });
+
     resumeSafe.addEventListener('click',()=>{
       if(!ready||!syncBlocked||!conflictCanResume) return;
       if(!confirm(`Cloud hanya memiliki sebagian data (${remote.size} dokumen). Lanjutkan mengirim ${conflictMissingKeys.length} dokumen yang belum ada? Simpan BACKUP JSON lokal terlebih dahulu. Data cloud lainnya tidak dihapus.`))return;
@@ -358,6 +465,7 @@ if (!valid) {
       inflight.clear();
       syncProgress = { active: false, complete: false, confirmed: 0, mode: 'auto', error: false };
       syncBlocked = false;
+      repairing = false;
       stopRetry = false;
       conflictCanResume = false;
       conflictMissingKeys = [];
@@ -515,7 +623,7 @@ if (!valid) {
         if(window.AreaApp.getPendingSharedUI())planUISync(500);
         statusMsg('⏳ Mengambil data terbaru dari Firestore…');
         unsub = onSnapshot(collection(db, 'workspaces', wid, 'records'), { includeMetadataChanges: true }, async snap => {
-          if (version !== connectionVersion) return;
+          if (version !== connectionVersion || repairing) return;
           if (!first && snap.metadata.fromCache) {
             statusMsg('⏳ Menunggu jawaban dari server…');
             return;
@@ -539,7 +647,12 @@ if (!valid) {
             }
             editing=true;els.upload.hidden=true;
           } else if (syncBlocked) {
-            blockSync(localPack,remote,'Data cloud berubah saat sinkronisasi ditahan');return;
+            const conflict=calculateConflict(localPack,remote);
+            if(conflict.differs){blockSync(localPack,remote,'Data cloud berubah saat sinkronisasi ditahan');return;}
+            // Jika semua dokumen sudah identik (contohnya sesudah pemulihan pada
+            // perangkat lain), jangan biarkan mode aman terkunci selamanya.
+            syncBlocked=false;editing=true;stopRetry=false;
+            baseline=new Map(localPack);conflictBox.hidden=true;
           }
           if (editing) {
             if(pendingCount() || busy) {displayStatus();return;}
@@ -586,7 +699,7 @@ if (!valid) {
     });
 
     els.logout.addEventListener('click', async () => {
-      if (pendingCount() || busy || window.AreaApp.getPendingSharedUI() || uiSaving) {
+      if (pendingCount() || busy || repairing || window.AreaApp.getPendingSharedUI() || uiSaving) {
         alert('Masih ada data atau pengaturan tampilan yang belum terkirim. Jangan keluar akun dahulu.');
         return;
       }

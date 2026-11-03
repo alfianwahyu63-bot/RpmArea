@@ -414,3 +414,6 @@ body{color:var(--ink)}
 @media(max-width:1000px){.daily-report-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.daily-report-panel{padding:17px 16px;margin:12px 0 20px;border-radius:20px}.daily-date-field{width:100%}.daily-report-stats{gap:7px}.daily-count{padding:12px 8px;display:block}.daily-count b{display:block;margin-top:7px;font-size:24px}.daily-count span{font-size:10px}.daily-report-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.daily-store{padding:10px}.daily-store-badge{font-size:9px}.daily-store-name{font-size:10px}.daily-store-actions button{padding:8px 9px}}
 @media(max-width:370px){.daily-report-list{grid-template-columns:1fr}}
+
+/* V16: opsi pemulihan QTY khusus yang terkunci sampai lolos validasi konflik */
+.cloud-repair-message{border:1px solid rgba(162,250,105,.35);background:rgba(140,255,94,.09);padding:12px 14px;border-radius:13px;font-size:12px;line-height:1.6}.cloud-conflict #cloudRestoreQty{background:linear-gradient(100deg,#94ff66,#2dcdbb);color:#081824;font-weight:900;border:0;white-space:normal;line-height:1.35}
