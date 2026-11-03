@@ -417,3 +417,6 @@ body{color:var(--ink)}
 
 /* V16: opsi pemulihan QTY khusus yang terkunci sampai lolos validasi konflik */
 .cloud-repair-message{border:1px solid rgba(162,250,105,.35);background:rgba(140,255,94,.09);padding:12px 14px;border-radius:13px;font-size:12px;line-height:1.6}.cloud-conflict #cloudRestoreQty{background:linear-gradient(100deg,#94ff66,#2dcdbb);color:#081824;font-weight:900;border:0;white-space:normal;line-height:1.35}
+
+/* V17: one-tap, explicitly approved reconciliation on the Cloud screen */
+.cloud-resync-actions{gap:10px;align-items:stretch;flex-wrap:wrap}.cloud-resync-actions #cloudResyncNow{flex:1 1 100%;min-height:49px;font-weight:900;background:linear-gradient(110deg,#a8fa6e,#28c9b9);color:#0c2025;border:0}.cloud-resync-message{font-size:12px;line-height:1.6;padding:12px;border:1px solid rgba(149,236,205,.21);background:rgba(15,32,35,.45);border-radius:12px;color:var(--muted);overflow-wrap:anywhere}.cloud-resync-message[data-state="error"]{color:#ffaeb5;background:rgba(255,85,100,.09)}.cloud-resync-message[data-state="success"]{color:#a5f3bc;background:rgba(51,210,112,.09)}.cloud-resync-actions button:disabled{opacity:.62;cursor:progress}

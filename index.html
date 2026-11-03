@@ -153,7 +153,7 @@ Kode Toko: SC94
   </section>
   <section id="cloudConflict" class="cloud-conflict" hidden>
   <strong>⚠️ Data lokal dan cloud tidak sama</strong><p id="cloudConflictText">Sinkronisasi dihentikan untuk melindungi data.</p>
-  <div class="inline-actions"><button type="button" class="btn secondary" id="cloudExportLocal">↓ Backup Lokal</button><button type="button" class="btn secondary" id="cloudExportRemote">↓ Backup Cloud</button><button type="button" class="btn primary" id="cloudResumeSafe" hidden>↑ Lanjutkan Data yang Belum Terkirim</button><button type="button" class="btn primary" id="cloudRestoreQty" hidden>✓ Pulihkan QTY 0 di Cloud</button></div>
+  <div class="inline-actions cloud-resync-actions"><button type="button" class="btn primary" id="cloudResyncNow">🔄 Sinkronisasi Ulang Aman</button><button type="button" class="btn secondary" id="cloudExportLocal">↓ Backup Lokal</button><button type="button" class="btn secondary" id="cloudExportRemote">↓ Backup Cloud</button><button type="button" class="btn primary" id="cloudResumeSafe" hidden>↑ Lanjutkan Data yang Belum Terkirim</button><button type="button" class="btn primary" id="cloudRestoreQty" hidden>✓ Pulihkan QTY 0 di Cloud</button></div><p id="cloudResyncStatus" class="cloud-resync-message" role="status" aria-live="polite">Tombol ini mengambil data cloud terbaru dan mencoba menggabungkan QTY yang tidak bertentangan, tanpa menghapus data.</p>
   <p id="cloudRepairMessage" class="cloud-repair-message" hidden></p>
   <p class="cloud-small">Tidak ada data yang dihapus atau ditimpa secara otomatis. Cek kedua backup sebelum melanjutkan. Pemulihan QTY harus dikonfirmasi manual dan akan dibatalkan jika data cloud berubah.</p>
 </section><p id="cloudUIStatus" class="shared-ui-status" role="status" aria-live="polite">☁ Pengaturan tampilan menunggu koneksi.</p><div class="logged-email" id="cloudUser"></div><div class="inline-actions"><button id="cloudUploadLocal" type="button" class="btn primary" hidden>↑ Unggah data lokal ke area</button><button id="cloudLogout" type="button" class="btn danger">Keluar akun</button></div></div><p class="cloud-small">Untuk aktivasi pertama, admin harus membuat <code>workspaces/rpm-area-12/members/{UID}</code> berisi <code>role: editor</code> di Firestore. Backup JSON sebelum unggah data pertama.</p></dialog>
@@ -162,6 +162,7 @@ Kode Toko: SC94
 <script src="./excel.js"></script>
 <script src="./firebase-config.js"></script>
 <script src="./data-guard.js"></script>
+<script src="./safe-merge.js"></script>
 <script src="./app.js"></script>
 <script type="module" src="./cloud.js"></script>
 </body></html>

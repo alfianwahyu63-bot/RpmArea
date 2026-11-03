@@ -221,7 +221,13 @@ if (!valid) {
     const resumeSafe = $('#cloudResumeSafe');
     const restoreQty = $('#cloudRestoreQty');
     const repairMessage = $('#cloudRepairMessage');
+    const resyncButton = $('#cloudResyncNow');
+    const resyncStatus = $('#cloudResyncStatus');
     let repairing = false;
+    let reconciling = false;
+    function resyncMessage(message,state='pending'){
+      if(resyncStatus){resyncStatus.textContent=message;resyncStatus.dataset.state=state;}
+    }
     function calculateConflict(localPack, cloudPack) {
       const missingLocal = [...localPack.keys()].filter(k => !cloudPack.has(k));
       const extraRemote = [...cloudPack.keys()].filter(k => !localPack.has(k));
@@ -267,6 +273,128 @@ if (!valid) {
       }
       return plan;
     }
+    // One button for both: GET fresh server state (not cache) then, if safe,
+    // preview and reconcile known non-conflicting differences in ONE atomic
+    // Firestore transaction. No deletion, no 'last write wins'.
+    resyncButton?.addEventListener('click', async()=>{
+      if(!ready || !auth.currentUser){resyncMessage('Masuk ke Firebase dan pastikan keanggotaan workspace sudah aktif.','error');return;}
+      if(!navigator.onLine){resyncMessage('HP sedang offline. Sambungkan internet untuk mengambil data Firebase terbaru.','error');return;}
+      if(reconciling||repairing||busy||pendingCount()){
+        resyncMessage('Ada proses cloud lain yang belum selesai. Selesaikan atau buat backup sebelum mencoba lagi.','error');return;
+      }
+      const version=connectionVersion;
+      reconciling=true;repairing=true;resyncButton.disabled=true;
+      resyncButton.textContent='⏳ Memeriksa Firebase…';
+      try{
+        statusMsg('⏳ Mengambil ulang data Cloud langsung dari server (bukan cache)…','warn','Cloud: Cek');
+        resyncMessage('Mengambil data terbaru. Data HP dan Firebase belum diubah.');
+        const docSnap=await getDocsFromServer(collection(db,'workspaces',wid,'records'));
+        if(version!==connectionVersion)return;
+        remote=new Map(docSnap.docs.filter(d=>d.id!=='area_config').map(d=>[d.id,strip(d.data())]));
+        const before=pack(window.AreaApp.getData());
+        if(!before.size){resyncMessage('Data di HP masih kosong. Sinkronisasi ulang dari layar konflik tidak dijalankan. Buat backup terlebih dahulu.','error');return;}
+        const difference=calculateConflict(before,remote);
+        if(!difference.differs){
+          syncBlocked=false;editing=true;first=true;stopRetry=false;
+          baseline=new Map(remote);conflictBox.hidden=true;restoreQty.hidden=true;
+          await receive();
+          if(version!==connectionVersion)return;
+          statusMsg('✅ Pemeriksaan selesai: data lokal dan Cloud sudah sama. Sinkronisasi aktif.','ok','Cloud: Aktif');
+          resyncMessage('✅ Data di HP dan Firebase cocok. Tidak perlu mengunggah dokumen.','success');
+          return;
+        }
+        blockSync(before,remote,'Hasil pemeriksaan ulang');
+        const plan=window.RpmSafeMerge?.build(before,remote);
+        if(!plan?.ok){
+          const summary=plan?.reason||'Modul pemeriksaan perbedaan belum siap';
+          resyncMessage('⛔ '+summary+' '+(plan?.issues?.length?'Contoh: '+plan.issues.slice(0,4).join(' | '):'')+' • Klik Backup Lokal dan Backup Cloud, lalu kirim file untuk analisis. Tidak ada data ditimpa.','error');
+          statusMsg('🛑 Terdapat konflik yang tidak bisa digabung otomatis. Data tetap aman.','error','Cloud: Aman');
+          return;
+        }
+        if(!plan.count){resyncMessage('Tidak ada perubahan yang harus digabung.','success');return;}
+        const summary=`${plan.count} dokumen berbeda. Tambahan QTY dari HP: ${plan.localQty}; dari Cloud: ${plan.cloudQty}. Status laporan harian HP yang belum di Cloud: ${plan.daysMerged}. Dokumen yang perlu ditulis: ${plan.writeCount}.`;
+        resyncMessage('✅ Dapat digabung tanpa menimpa QTY yang sama-sama sudah terisi. '+summary);
+        const approved=confirm(
+          'SINKRONISASI ULANG AMAN — KONFIRMASI\n\n'+summary+
+          '\n\nSistem hanya mengambil QTY > 0 ketika salinan lain masih 0, dan menyatukan penanda laporan harian. Jika QTY positif di kedua sisi berbeda, proses DIBATALKAN.\n'+
+          '⚠️ Jika 0 merupakan koreksi penjualan yang disengaja, JANGAN lanjut — angka 0 tersebut akan berubah mengikuti nilai positif pada salinan lainnya.\n\n'+
+          'Cadangan lokal dan cloud akan diunduh sebelum proses. Pastikan data benar dan tidak ada input dari HP lain selama proses. Lanjutkan?'
+        );
+        if(!approved){resyncMessage('Dibatalkan. Kedua data tetap seperti semula. Klik Backup Lokal dan Backup Cloud untuk memeriksa rincian.');return;}
+        if(window.AreaSafety && !(await window.AreaSafety.beforeRemote()))throw Error('Gagal membuat backup lokal IndexedDB. Tidak ada perubahan dikirim.');
+        if(version!==connectionVersion)return;
+        // Backup files contain both sides and are useful even if a later attempt fails.
+        window.AreaApp.downloadLocal();
+        saveJson('Backup_RpmArea_Cloud_SEBELUM_SINKRON_ULANG_'+new Date().toISOString().slice(0,10)+'.json',cloudState());
+        const freshLocal=pack(window.AreaApp.getData());
+        if(calculateConflict(before,freshLocal).differs)throw Error('Data HP berubah setelah pemeriksaan. Tidak ada dokumen yang dikirim. Coba ulang.');
+        statusMsg('🔐 Firebase mengecek ulang '+plan.count+' dokumen dalam transaksi aman…','warn','Cloud: Periksa');
+        resyncMessage('Memeriksa perubahan secara atomik. Jika Cloud berubah saat pemeriksaan, transaksi akan dibatalkan.');
+        if(plan.writeCount){
+          await runTransaction(db,async tx=>{
+            const reads=[];
+            // All transaction reads before writes, per Firestore requirement.
+            for(const change of plan.changes){
+              const ref=doc(db,'workspaces',wid,'records',change.id);
+              const snap=await tx.get(ref);
+              if(!snap.exists())throw Error('Dokumen hilang selama proses: '+change.id);
+              if(!same(strip(snap.data()),change.server))throw Error('Data Cloud berubah pada '+(change.local.code||'?')+' / '+(change.local.plu||'status toko')+'. Sinkronisasi dibatalkan. Coba ulang.');
+              reads.push({ref,change});
+            }
+            for(const {ref,change} of reads){
+              if(!change.write)continue;
+              const patch={updatedAt:serverTimestamp(),editedBy:auth.currentUser.uid};
+              if(change.kind==='item')patch.days=change.merged.days;
+              else if(change.kind==='store')patch.reportedDays=change.merged.reportedDays;
+              else throw Error('Jenis dokumen tidak dikenal: '+change.id);
+              tx.update(ref,patch);
+            }
+          },{maxAttempts:3});
+        }
+        if(version!==connectionVersion)return;
+        statusMsg('⏳ Firebase sudah memproses perubahan. Memverifikasi ulang 864 dokumen…','warn','Cloud: Verifikasi');
+        const freshCloud=await getDocsFromServer(collection(db,'workspaces',wid,'records'));
+        if(version!==connectionVersion)return;
+        remote=new Map(freshCloud.docs.filter(d=>d.id!=='area_config').map(d=>[d.id,strip(d.data())]));
+        const verification=calculateConflict(plan.expected,remote);
+        if(verification.differs){
+          blockSync(pack(window.AreaApp.getData()),remote,'Cloud mengalami perubahan baru ketika sinkron ulang');
+          resyncMessage('⚠️ Cloud menerima perubahan lain setelah transaksi. Tidak ada perubahan data HP. Periksa ulang sebelum mencoba lagi.','error');
+          return;
+        }
+        if(calculateConflict(before,pack(window.AreaApp.getData())).differs){
+          blockSync(pack(window.AreaApp.getData()),remote,'Data HP berubah ketika sinkron ulang');
+          resyncMessage('⚠️ Data HP berubah saat proses. Data Cloud sudah diverifikasi, tetapi HP belum diperbarui. Klik sinkronisasi ulang.','error');return;
+        }
+        // Cloud has the explicitly approved union; this is the only safe point
+        // to apply server data to HP. AreaApp.applyRemote snapshots local first.
+        baseline=new Map(remote);syncBlocked=false;editing=true;first=true;stopRetry=false;
+        conflictBox.hidden=true;restoreQty.hidden=true;resumeSafe.hidden=true;
+        await receive();
+        if(version!==connectionVersion)return;
+        const finalCheck=calculateConflict(pack(window.AreaApp.getData()),remote);
+        if(finalCheck.differs){blockSync(pack(window.AreaApp.getData()),remote,'Setelah verifikasi masih ada konflik');resyncMessage('⚠️ HP masih berbeda setelah pembaruan; jangan input dulu, backup dan periksa.','error');return;}
+        statusMsg('✅ SINKRON ULANG BERHASIL. '+plan.count+' konflik diselesaikan, '+remote.size+' dokumen diverifikasi.','ok','Cloud: Aktif');
+        resyncMessage('✅ Sinkronisasi berhasil! '+plan.count+' dokumen cocok, tambahan QTY HP '+plan.localQty+', QTY Cloud '+plan.cloudQty+'; semua '+remote.size+' dokumen kini selaras.','success');
+        window.AreaApp.notify('✓ Sinkronisasi ulang berhasil. Simpan backup terbaru.');
+      }catch(err){
+        if(version!==connectionVersion)return;
+        const error=String(err.code||err.message||err);
+        // A failed/uncertain operation must NEVER re-enable automatic overwrite.
+        if(ready && remote.size && pack(window.AreaApp.getData()).size)blockSync(pack(window.AreaApp.getData()),remote,'Hasil sinkronisasi ulang belum terverifikasi');
+        else {syncBlocked=true;editing=false;conflictBox.hidden=false;}
+        statusMsg('⛔ Sinkronisasi ulang belum selesai: '+error+'. Data di HP tidak otomatis ditimpa.','error','Cloud: Aman');
+        resyncMessage('⛔ '+error+' • Periksa backup dan ulangi. Jika transaksi sempat berhasil, tombol akan memverifikasi ulang dari server.','error');
+      }finally{
+        reconciling=false;repairing=false;
+        if(version===connectionVersion){
+          resyncButton.disabled=false;
+          resyncButton.textContent='🔄 Sinkronisasi Ulang Aman';
+          if(syncBlocked)showRepairOption(pack(window.AreaApp.getData()),remote);
+        }
+      }
+    });
+
     function dataCounts(model){let stores=0,items=0;for(const week of Object.values(model.weeks||{})){for(const store of Object.values(week.stores||{})){stores++;items+=(store.items||[]).length}}return {stores,items}}
     function blockSync(localPack, cloudPack, label='Cloud dan perangkat berbeda'){
       const c=calculateConflict(localPack,cloudPack);
