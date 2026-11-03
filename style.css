@@ -435,3 +435,5 @@ body{color:var(--ink)}
 .cloud-diagnostic-result[data-state="error"]{color:#ffacb0;background:rgba(244,63,94,.1)}
 .cloud-diagnostic-result[data-state="warning"]{color:#ffcc80;background:rgba(245,158,11,.1)}
 .cloud-diagnostic-result[data-state="success"]{color:#a6f4be;background:rgba(34,197,94,.1)}
+
+.cloud-diagnostic .inline-actions{display:flex;gap:10px;flex-wrap:wrap}.cloud-diagnostic .inline-actions button{flex:1 1 180px}.cloud-progress.is-error .cloud-progress-fill{background:#f87171}.cloud-resync-main{margin:9px 0 10px}.cloud-diagnostic-result{overflow-wrap:anywhere}.cloud-conflict strong{font-size:1.05em}

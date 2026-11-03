@@ -1,0 +1,92 @@
+/* RpmArea V20: Firestore REST transport.
+   Firebase Authentication ID token; Security Rules still apply.
+   All writes have existence/updateTime preconditions, and no automatic retry on uncertain result.
+*/
+(function(root){'use strict';
+function encodeValue(v){
+ if(v===undefined||v===null)return{nullValue:null};
+ if(typeof v==='boolean')return{booleanValue:v};
+ if(typeof v==='string')return{stringValue:v};
+ if(typeof v==='number'){if(!Number.isFinite(v))throw Error('Angka tidak valid dalam data.');return Number.isSafeInteger(v)?{integerValue:String(v)}:{doubleValue:v};}
+ if(Array.isArray(v))return{arrayValue:{values:v.map(encodeValue)}};
+ if(typeof v==='object')return{mapValue:{fields:encodeFields(v)}};
+ throw Error('Jenis nilai tidak didukung: '+typeof v);
+}
+function encodeFields(obj){return Object.fromEntries(Object.entries(obj||{}).filter(([,v])=>v!==undefined).map(([key,v])=>[key,encodeValue(v)]))}
+function decodeValue(v){
+ if(!v||typeof v!=='object')return null;
+ if('nullValue'in v)return null;
+ if('stringValue'in v)return v.stringValue;
+ if('booleanValue'in v)return v.booleanValue;
+ if('integerValue'in v)return Number(v.integerValue);
+ if('doubleValue'in v)return Number(v.doubleValue);
+ if('timestampValue'in v)return v.timestampValue;
+ if('referenceValue'in v)return v.referenceValue;
+ if('arrayValue'in v)return (v.arrayValue?.values||[]).map(decodeValue);
+ if('mapValue'in v)return decodeFields(v.mapValue?.fields||{});
+ return null;
+}
+function decodeFields(fields){return Object.fromEntries(Object.entries(fields||{}).map(([key,val])=>[key,decodeValue(val)]))}
+function canonical(v){return Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v}
+function same(a,b){return JSON.stringify(canonical(a))===JSON.stringify(canonical(b))}
+class RestError extends Error {constructor(message,code,http){super(message);this.name='RestError';this.code=code;this.http=http}}
+function makeClient({projectId,workspaceId,getToken,fetchImpl=globalThis.fetch,timeoutMs=18000}){
+ const dbPath=`projects/${projectId}/databases/(default)`;
+ const rootPath=`${dbPath}/documents`;
+ const prefix='https://firestore.googleapis.com/v1/';
+ const recordPath=`${rootPath}/workspaces/${encodeURIComponent(workspaceId)}/records`;
+ const memberPath=`${rootPath}/workspaces/${encodeURIComponent(workspaceId)}/members`;
+ const recordName=id=>`${recordPath}/${encodeURIComponent(id)}`;
+ async function request(path,{method='GET',body,timeout=timeoutMs}={}){
+  let tokenTimer;
+  let token;
+  try{token=await Promise.race([Promise.resolve().then(getToken),new Promise((_,reject)=>{tokenTimer=setTimeout(()=>reject(new RestError('Token login Firebase tidak tersedia dalam 15 detik','AUTH_TIMEOUT',0)),15000)})])}
+  finally{clearTimeout(tokenTimer)}
+  if(!token)throw new RestError('Belum login Firebase','UNAUTHENTICATED',401);
+  const ac=new AbortController(),timer=setTimeout(()=>ac.abort(),timeout);
+  try{
+   const res=await fetchImpl(prefix+path,{method,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Cache-Control':'no-store'},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',signal:ac.signal});
+   const content=await res.text();let parsed;try{parsed=content?JSON.parse(content):{}}catch{parsed={message:content.slice(0,180)}}
+   if(!res.ok)throw new RestError(String(parsed.error?.message||parsed.message||res.statusText||'HTTP error'),String(parsed.error?.status||'HTTP_'+res.status),res.status);
+   return parsed;
+  }catch(err){
+   if(err.name==='AbortError')throw new RestError(`Server Firestore tidak menjawab dalam ${timeout/1000} detik. Status penulisan BELUM PASTI — periksa ulang sebelum mencoba.`, 'TIMEOUT_UNKNOWN',0);
+   if(err instanceof RestError)throw err;
+   throw new RestError('Gagal menghubungi Firestore via HTTPS: '+String(err.message||err), 'NETWORK_ERROR',0);
+  }finally{clearTimeout(timer)}
+ }
+ const clean=doc=>{const value=decodeFields(doc?.fields||{});delete value.updatedAt;delete value.editedBy;return value};
+ async function getMember(uid){const doc=await request(memberPath+'/'+encodeURIComponent(uid));return{value:clean(doc),updateTime:doc.updateTime}}
+ async function getRecord(id){try{const doc=await request(recordName(id));return{value:clean(doc),updateTime:doc.updateTime}}catch(err){if(err.http===404)return null;throw err}}
+ async function listRecords(){
+  const result=new Map();let pageToken='';let guard=0;
+  do{
+   let url=recordPath+'?pageSize=450';if(pageToken)url+='&pageToken='+encodeURIComponent(pageToken);
+   const page=await request(url,{timeout:30000});
+   for(const doc of page.documents||[]){const id=decodeURIComponent(doc.name.split('/').pop());result.set(id,{value:clean(doc),updateTime:doc.updateTime})}
+   pageToken=page.nextPageToken||'';
+   if(++guard>100)throw new RestError('Terlalu banyak halaman data Firestore','INVALID_PAGINATION',0)
+  }while(pageToken);
+  return result;
+ }
+ function createWrite(change){
+  const {id,value,previous}=change;
+  if(value===null)throw new RestError('Penghapusan otomatis dinonaktifkan untuk melindungi data toko.','UNSAFE_DELETE',0);
+  if(!id||typeof value!=='object')throw Error('Data dokumen tidak valid.');
+  return {
+   update:{name:recordName(id),fields:encodeFields({...value,editedBy:change.uid||''})},
+   currentDocument:previous?.updateTime?{updateTime:previous.updateTime}:{exists:false},
+   updateTransforms:[{fieldPath:'updatedAt',setToServerValue:'REQUEST_TIME'}]
+  };
+ }
+ async function commit(changes,{timeout=25000}={}){
+  if(!changes.length)return{writeResults:[]};
+  if(changes.length>75)throw Error('Maksimal 75 dokumen dalam satu batch REST.');
+  return request(`${dbPath}/documents:commit`,{method:'POST',body:{writes:changes.map(createWrite)},timeout});
+ }
+ return{request,getMember,getRecord,listRecords,commit,createWrite,rootPath,recordName};
+}
+const api={makeClient,encodeValue,encodeFields,decodeValue,decodeFields,canonical,same,RestError};
+root.RpmCloudREST=api;
+if(typeof module!=='undefined'&&module.exports)module.exports=api;
+})(typeof window!=='undefined'?window:globalThis);

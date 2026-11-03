@@ -1,0 +1,14 @@
+RPM AREA V20 — FIRESTORE HTTPS (PERBAIKAN SINKRON ANTAR-HP)
+
+1. JANGAN uninstall PWA, hapus cache, atau menghapus data browser.
+2. Pada V19, simpan Backup Lokal dan Backup Cloud. Simpan kedua file di luar HP juga jika bisa.
+3. Upload semua ISI folder RpmArea-main V20 ke repository GitHub, termasuk cloud.js, cloud-rest.js, index.html, style.css, sw.js.
+4. Tunggu Pages siap dan buka aplikasi di browser menggunakan URL dengan parameter ?v=20.
+5. Buka Cloud: pastikan V20 · HTTPS tampil. Login.
+6. Tekan Tes Baca & Tulis Firebase. Tes tulis meminta konfirmasi dan tidak menyentuh QTY.
+7. Jika HTTP 403 PERMISSION_DENIED: admin perlu memeriksa aturan Firestore untuk workspaces/rpm-area-12/records/{docId}, dan dokumen anggota role editor. Versi aplikasi TIDAK dapat menembus aturan yang menolak penulisan.
+8. Jika pembacaan HTTP berhasil tetapi ada konflik, tekan Sinkronisasi Ulang Aman. Baca ringkasan, backup kedua sisi, dan hanya konfirmasi jika QTY benar.
+9. Jika timeout, JANGAN klik upload berulang kali: klik Cek Cloud Sekarang (GET) dahulu.
+10. Sesudah pesan BERHASIL & TERVERIFIKASI, buka HP lain yang login ke workspace sama; seharusnya data dari Cloud terbaca saat cek otomatis sekitar 20 detik atau reload halaman.
+
+Catatan: V20 mengganti jalur komunikasi data menjadi Firestore REST HTTPS, memakai Firebase Auth ID token dan Security Rules yang sama. Penghapusan otomatis dinonaktifkan; penggabungan konflik hanya sesudah konfirmasi. Tidak ada jaminan sinkron apabila Rules menolak atau jaringan memblokir firestore.googleapis.com.
