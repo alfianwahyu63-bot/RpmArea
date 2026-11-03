@@ -353,3 +353,16 @@ body{color:var(--ink)}
 
 /* Respect native hidden property, including cloud upload button during a running sync. */
 [hidden]{display:none!important}
+
+/* V10: peringatan konflik sinkronisasi dan akses pemulihan */
+.cloud-conflict{padding:18px;margin:12px 0;border:1px solid #f7bf6570;background:#352b20;border-radius:18px;color:#fff}
+.cloud-conflict strong{font-size:15px;color:#ffcf81}.cloud-conflict p{font-size:13px;line-height:1.55;color:#e7dcca}
+.cloud-conflict .inline-actions{flex-wrap:wrap;gap:8px}.cloud-conflict button{font-size:12px}
+.cloud-rescue{margin:8px 0}.cloud-rescue .btn{font-size:12px;white-space:normal;text-align:center}
+
+/* V11: sinkronisasi tampilan lintas perangkat, tidak bercampur dengan unggahan data penjualan */
+.shared-ui-panel{border:1px solid color-mix(in srgb,var(--accent, #a3fa64) 28%,transparent);}
+.shared-ui-status{padding:13px 15px;margin:15px 0;border:1px solid rgba(130,154,179,.26);border-radius:14px;background:rgba(100,130,159,.10);line-height:1.55;font-size:.92rem;color:var(--text,#eaf0fa);}
+.shared-ui-status[data-state="saved"]{border-color:rgba(110,218,131,.48);background:rgba(96,205,120,.12);}
+.shared-ui-status[data-state="pending"]{border-color:rgba(255,197,79,.46);background:rgba(255,201,90,.10);}
+.shared-ui-status[data-state="error"]{border-color:rgba(255,109,115,.50);background:rgba(255,90,100,.10);}
