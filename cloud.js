@@ -81,7 +81,9 @@ if (!valid) {
             type: 'store', week, code: store.code, name: store.name,
             targetQty: Number(store.targetQty) || 0,
             targetNS: Number(store.targetNS) || 0,
-            brandTargets: store.brandTargets || {}
+            brandTargets: store.brandTargets || {},
+            // Jangan tulis field kosong pada store lama; mencegah konflik sinkronisasi saat upgrade V14 -> V15.
+            ...(store.reportedDays && Object.keys(store.reportedDays).length ? {reportedDays:store.reportedDays} : {})
           });
           for (const item of store.items || []) {
             if (!item.id) continue;
@@ -240,7 +242,7 @@ if (!valid) {
       if(row.type==='area-config'){state.settings=row.settings||state.settings;continue}
       if(!row.week||!row.code)continue;
       const w=(state.weeks[row.week]||={stores:{}}),st=(w.stores[row.code]||={code:row.code,name:row.code,targetQty:0,targetNS:0,items:[]});
-      if(row.type==='store'){Object.assign(st,{name:row.name||st.name,targetQty:Number(row.targetQty)||0,targetNS:Number(row.targetNS)||0,brandTargets:row.brandTargets||{}})}
+      if(row.type==='store'){Object.assign(st,{name:row.name||st.name,targetQty:Number(row.targetQty)||0,targetNS:Number(row.targetNS)||0,brandTargets:row.brandTargets||{},reportedDays:row.reportedDays||{}})}
       if(row.type==='item'){st.items.push({id:row.id,plu:row.plu,brand:row.brand,description:row.description,hpp:Number(row.hpp)||0,days:row.days||[0,0,0,0,0,0,0]})}
     }return state;}
     exportLocal.addEventListener('click',()=>window.AreaApp.downloadLocal());

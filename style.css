@@ -371,3 +371,46 @@ body{color:var(--ink)}
 .resume-export-actions{justify-content:flex-end;flex-wrap:wrap;gap:8px}.select-wrap.compact{gap:6px}.select-wrap.compact select{max-width:190px;padding:10px 11px}.input-tools{justify-content:flex-end;flex-wrap:wrap;gap:9px}.search.compact{min-width:220px}.input-sort-meta{display:block;margin-top:6px;color:var(--muted);font-size:11px;font-weight:800}.resume-panel .pill{white-space:nowrap}@media(max-width:900px){.resume-export-actions,.input-tools{width:100%;justify-content:stretch}.resume-export-actions .select-wrap,.input-tools .select-wrap{flex:1 1 220px}.resume-export-actions .btn,.input-tools .search{width:100%}}
 
 #waTemplateBtn{white-space:normal;line-height:1.35} .wa-actions{flex-wrap:wrap} @media(max-width:640px){#waTemplateBtn{width:100%;justify-content:center}}
+
+
+/* RpmArea V15: status input per tanggal, tanpa mengubah perhitungan QTY/POINT. */
+.daily-report-panel{margin:18px 0 24px;padding:22px 24px;background:var(--card);border:1px solid var(--border);border-radius:24px}
+.daily-report-heading{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.daily-report-kicker{font-size:10px;letter-spacing:1.3px;font-weight:900;color:var(--accent)}
+.daily-report-heading h3{font-size:clamp(18px,2.7vw,25px);font-weight:900;margin:6px 0 6px;color:var(--ink)}
+.daily-report-heading p{font-size:12px;color:var(--muted);max-width:530px;line-height:1.6;margin:0}
+.daily-date-field{font-size:11px;color:var(--muted);font-weight:850;min-width:175px;display:flex;flex-direction:column;gap:7px}
+.daily-date-field select{background:var(--canvas);border:1px solid var(--border);border-radius:12px;padding:11px 13px;color:var(--ink);font-size:13px;font-weight:850;max-width:100%}
+.daily-report-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:20px 0 17px}
+.daily-count{border:1px solid var(--border);border-radius:16px;background:var(--canvas);padding:15px;display:flex;justify-content:space-between;align-items:center;gap:7px}
+.daily-count span{color:var(--muted);font-size:11px;font-weight:850}.daily-count b{font-size:30px;line-height:1.1;color:var(--ink)}
+.daily-count.is-done{background:color-mix(in srgb,#33cd91 10%,var(--card));border-color:color-mix(in srgb,#33cd91 28%,var(--border))}
+.daily-count.is-done b,.daily-count.is-done span{color:#2aca8d}
+.daily-count.is-missing{background:color-mix(in srgb,#f4b866 10%,var(--card));border-color:color-mix(in srgb,#f4b866 30%,var(--border))}
+.daily-count.is-missing b,.daily-count.is-missing span{color:#de9a40}
+.daily-progress-title{display:flex;justify-content:space-between;gap:15px;font-size:12px;font-weight:850;color:var(--ink);margin-bottom:8px}
+.daily-progress-title strong{color:var(--accent)}.daily-progress-track{height:10px;border-radius:99px;overflow:hidden;background:var(--canvas);border:1px solid var(--border)}
+.daily-progress-bar{height:100%;width:0;background:linear-gradient(90deg,#21bf98,#86f1ad);border-radius:99px;transition:width .3s}
+.daily-report-filters{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 13px}
+.daily-filter{border-radius:50px;border:1px solid var(--border);padding:9px 14px;color:var(--muted);background:var(--canvas);font-size:11px;font-weight:900;cursor:pointer}
+.daily-filter.selected{background:var(--subtle);border-color:var(--accent);color:var(--ink)}
+.daily-report-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.daily-store{border:1px solid var(--border);border-radius:15px;background:var(--canvas);padding:14px;min-width:0}
+.daily-store.is-done{border-left:3px solid #27c991}.daily-store.is-missing{border-left:3px solid #eaa551}
+.daily-store-top{display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+.daily-store-code{font-size:15px;font-weight:900;color:var(--ink)}
+.daily-store-badge{font-size:10px;font-weight:850;white-space:nowrap;border-radius:50px;padding:5px 7px}
+.daily-store-badge.is-done{color:#27c991;background:color-mix(in srgb,#27c991 12%,var(--card))}
+.daily-store-badge.is-missing{color:#dfa153;background:color-mix(in srgb,#dfa153 12%,var(--card))}
+.daily-store-name{color:var(--ink);font-size:11px;min-height:33px;line-height:1.45;font-weight:750;margin-top:10px;overflow-wrap:anywhere}
+.daily-store-detail{font-size:11px;color:var(--muted);margin:8px 0 12px}
+.daily-store-actions{display:flex;gap:7px;flex-wrap:wrap}
+.daily-store-actions button{font-size:11px;font-weight:850;border-radius:9px;padding:8px 11px;cursor:pointer;border:1px solid var(--border)}
+.daily-store-go{background:var(--subtle);color:var(--ink)}
+.daily-store-zero{background:color-mix(in srgb,#2dc793 12%,var(--card));color:#34c999}
+.daily-store-unmark{background:var(--canvas);color:var(--muted)}
+.daily-report-empty{grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:12px}
+.daily-report-help{font-size:11px;line-height:1.6;color:var(--muted);margin:14px 0 0}
+@media(max-width:1000px){.daily-report-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.daily-report-panel{padding:17px 16px;margin:12px 0 20px;border-radius:20px}.daily-date-field{width:100%}.daily-report-stats{gap:7px}.daily-count{padding:12px 8px;display:block}.daily-count b{display:block;margin-top:7px;font-size:24px}.daily-count span{font-size:10px}.daily-report-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.daily-store{padding:10px}.daily-store-badge{font-size:9px}.daily-store-name{font-size:10px}.daily-store-actions button{padding:8px 9px}}
+@media(max-width:370px){.daily-report-list{grid-template-columns:1fr}}
