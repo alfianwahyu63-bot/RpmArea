@@ -1,0 +1,32 @@
+RPM AREA V14 — BRAND & PLU ASCENDING + FORMAT WA
+
+DASAR: V13 (pengaturan dashboard, 9 tema, global settings Firebase, dan 3 template resume tetap dipertahankan).
+
+CARA PAKAI:
+1. Buka Input dan pilih toko yang benar.
+2. Daftar PLU otomatis diurutkan berdasarkan BRAND A-Z, lalu PLU kecil-besar di setiap BRAND.
+3. Klik "Salin Template WA (Brand A-Z, PLU ↑)" untuk menyalin daftar PLU lengkap toko ke clipboard.
+4. Tempel template ke WhatsApp. Isi kode toko yang benar dan isi QTY setelah tanda /. Contoh: 265287/6.
+5. Salin chat laporan, tempel ke aplikasi, pilih tanggal, lalu klik "Periksa Laporan" sebelum menyimpan.
+6. Jika semua QTY belum terisi (265287/), simpan akan ditolak agar tidak menghapus data lama. Untuk penjualan nol, tulis /0.
+
+FORMAT BARU:
+Format RPM per PLU
+Periode: 2-8 Nov
+Kode Toko: SC94
+
+✅*BANGO*
+265287/6
+429264/2
+
+✅*CAP LANG*
+5328/0
+5329/1
+5330/0
+
+CATATAN:
+- Kode Toko kosong akan menggunakan toko yang dipilih di aplikasi, dengan peringatan dan konfirmasi sebelum simpan.
+- Format lama (Format RPM/PLU, Toko: ..., ✅ Bango, Total/...) masih didukung.
+- Pengelompokan dan urutan PLU hanya mengubah tampilan dan template, bukan data Master, Target, HPP, QTY atau poin.
+- Backup JSON sebelum unggah ZIP ke GitHub. Jangan hapus data aplikasi di HP.
+- Update seluruh isi folder RpmArea-main pada GitHub. SW cache dinaikkan ke V14; bila tampilan masih lama, tutup dan buka kembali PWA (tanpa menghapus data browser).

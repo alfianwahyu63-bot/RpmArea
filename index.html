@@ -54,31 +54,32 @@
     <div id="inputSummary" class="input-summary"></div>
     <!-- WhatsApp text importer: daily quantity, target and item catalog remain weekly -->
     <section class="surface wa-panel" id="waImportPanel" aria-labelledby="waHeading">
-      <div class="panel-header"><div><span class="wa-kicker">⚡ INPUT CEPAT • CHAT WHATSAPP</span><h3 id="waHeading">Tempel Laporan RPM / PLU</h3><p>Salin chat laporan dari WhatsApp → pilih tanggal penjualan → periksa angka → simpan. Tidak perlu mengetik ulang setiap PLU.</p></div><span class="pill muted">Khusus minggu terpilih</span></div>
+      <div class="panel-header"><div><span class="wa-kicker">⚡ INPUT CEPAT • CHAT WHATSAPP</span><h3 id="waHeading">Tempel Laporan RPM per PLU</h3><p>Format baru: <b>Periode: 2-8 Nov</b>, <b>Kode Toko: SC94</b>, lalu <b>✅*BRAND*</b> dan <b>PLU/QTY</b>. Format lama tetap bisa digunakan. Pilih tanggal → periksa → simpan.</p></div><span class="pill muted">Khusus minggu terpilih</span></div>
       <div class="wa-controls">
         <label class="wa-label">Tanggal penjualan (wajib)<select id="waDaySelect"><option value="">Pilih tanggal dahulu</option></select><small>Angka dari chat akan dimasukkan ke <b>satu hari</b> yang Anda pilih, bukan ke tujuh hari sekaligus.</small></label>
         <label class="wa-label">Cara menyimpan<select id="waSaveMode"><option value="replace">Ganti QTY PLU yang disebut di laporan</option><option value="add">Tambahkan ke QTY yang sudah ada</option></select><small>Default <b>Ganti</b> supaya menempel ulang laporan tidak menggandakan penjualan.</small></label>
       </div>
-      <label class="wa-label wa-chatlabel" for="waText">Teks laporan WhatsApp<textarea id="waText" rows="10" spellcheck="false" placeholder="Format RPM/PLU
-Periode : 26 okt - 01 Nov
-Toko: SC94
+      <label class="wa-label wa-chatlabel" for="waText">Teks laporan WhatsApp<textarea id="waText" rows="10" spellcheck="false" placeholder="Format RPM per PLU
+Periode: 2-8 Nov
+Kode Toko: SC94
 
-✅ Bango
+✅*BANGO*
 265287/6
 429264/2
-*Total/8*
 
-✅ Bengbeng
-121618/12
-156907/6
-408445/
-425483/1
-*Total/19*"></textarea></label>
+✅*CAP LANG*
+5328/0
+5329/2
+5330/1
+
+✅*DOWNY*
+404631/0
+407607/3"></textarea></label>
       <div class="wa-options"><label class="wa-check"><input id="waAddUnknown" type="checkbox"><span>Izinkan PLU yang belum ada di master dibuat otomatis (HPP awal Rp0, wajib dilengkapi agar Sub NS akurat).</span></label></div>
-      <div class="inline-actions wa-actions"><button type="button" class="btn primary" id="waPreviewBtn">🔍 Periksa Laporan</button><button type="button" class="btn secondary" id="waApplyBtn" disabled>✓ Simpan QTY ke Tanggal Dipilih</button><button type="button" class="btn ghost" id="waClearBtn">Bersihkan teks</button></div>
-      <div id="waPreview" class="wa-preview" aria-live="polite" role="status"><div class="wa-empty">Tempel teks laporan dengan format <b>PLU/QTY</b>, lalu tekan <b>Periksa Laporan</b>. Baris <code>123456/</code> dihitung 0.</div></div>
+      <div class="inline-actions wa-actions"><button type="button" class="btn ghost" id="waTemplateBtn">📋 Salin Template WA (Brand A–Z, PLU ↑)</button><button type="button" class="btn primary" id="waPreviewBtn">🔍 Periksa Laporan</button><button type="button" class="btn secondary" id="waApplyBtn" disabled>✓ Simpan QTY ke Tanggal Dipilih</button><button type="button" class="btn ghost" id="waClearBtn">Bersihkan teks</button></div>
+      <div id="waPreview" class="wa-preview" aria-live="polite" role="status"><div class="wa-empty">Tempel teks laporan dengan format <b>PLU/QTY</b>, lalu tekan <b>Periksa Laporan</b>. Baris <code>123456/</code> dihitung 0. Template yang seluruh QTY-nya kosong tidak dapat disimpan untuk mencegah QTY lama terhapus.</div></div>
     </section>
-    <div class="surface input-surface"><div class="panel-header"><div><h3 id="inputStoreTitle">Pilih toko</h3><p id="inputWeekLabel">—</p><small id="inputSortMeta" class="input-sort-meta">Semua 0 PLU • Urutan Brand A–Z</small></div><div class="inline-actions input-tools"><label class="select-wrap compact">Urutkan <select id="inputSort" aria-label="Urutkan daftar PLU"><option value="brand-asc">Brand A–Z</option><option value="description-asc">Deskripsi A–Z</option><option value="plu-asc">PLU kecil–besar</option><option value="plu-desc">PLU besar–kecil</option></select></label><input id="inputSearch" class="search compact" type="search" placeholder="Cari PLU / brand / deskripsi" aria-label="Cari PLU atau brand"><span class="pill muted">Geser tabel ➜ di HP</span></div></div><div class="table-scroll"><table class="entrytable"><thead><tr><th class="sticky-col">PLU</th><th>BRAND</th><th>DESKRIPSI</th><th>HPP / UNIT</th><th>SEN</th><th>SEL</th><th>RAB</th><th>KAM</th><th>JUM</th><th>SAB</th><th>MIN</th><th>TOTAL QTY</th><th>SUB NS</th><th></th></tr></thead><tbody id="entryBody"></tbody><tfoot id="entryFoot"></tfoot></table></div></div>
+    <div class="surface input-surface"><div class="panel-header"><div><h3 id="inputStoreTitle">Pilih toko</h3><p id="inputWeekLabel">—</p><small id="inputSortMeta" class="input-sort-meta">Semua 0 PLU • Urutan Brand A–Z → PLU ↑</small></div><div class="inline-actions input-tools"><label class="select-wrap compact">Urutkan <select id="inputSort" aria-label="Urutkan daftar PLU"><option value="brand-asc">Brand A–Z → PLU ↑</option><option value="description-asc">Deskripsi A–Z</option><option value="plu-asc">PLU kecil–besar</option><option value="plu-desc">PLU besar–kecil</option></select></label><input id="inputSearch" class="search compact" type="search" placeholder="Cari PLU / brand / deskripsi" aria-label="Cari PLU atau brand"><span class="pill muted">Geser tabel ➜ di HP</span></div></div><div class="table-scroll"><table class="entrytable"><thead><tr><th class="sticky-col">PLU</th><th>BRAND</th><th>DESKRIPSI</th><th>HPP / UNIT</th><th>SEN</th><th>SEL</th><th>RAB</th><th>KAM</th><th>JUM</th><th>SAB</th><th>MIN</th><th>TOTAL QTY</th><th>SUB NS</th><th></th></tr></thead><tbody id="entryBody"></tbody><tfoot id="entryFoot"></tfoot></table></div></div>
   </section>
   <section id="view-stores" class="view" aria-labelledby="storesHeading">
     <div class="sectionhead"><div><div class="eyebrow">MASTER TOKO · PER MINGGU</div><h2 id="storesHeading">Target & daftar toko</h2><p>Impor kode toko, nama toko, Target QTY dan Target NS melalui Excel. Tiap minggu tersimpan terpisah.</p></div><button id="addStore" type="button" class="btn primary">＋ Tambah Toko</button></div>

@@ -369,3 +369,5 @@ body{color:var(--ink)}
 
 /* V13 tambahan dari V11: opsi resume PNG dan tabel PLU ascending. */
 .resume-export-actions{justify-content:flex-end;flex-wrap:wrap;gap:8px}.select-wrap.compact{gap:6px}.select-wrap.compact select{max-width:190px;padding:10px 11px}.input-tools{justify-content:flex-end;flex-wrap:wrap;gap:9px}.search.compact{min-width:220px}.input-sort-meta{display:block;margin-top:6px;color:var(--muted);font-size:11px;font-weight:800}.resume-panel .pill{white-space:nowrap}@media(max-width:900px){.resume-export-actions,.input-tools{width:100%;justify-content:stretch}.resume-export-actions .select-wrap,.input-tools .select-wrap{flex:1 1 220px}.resume-export-actions .btn,.input-tools .search{width:100%}}
+
+#waTemplateBtn{white-space:normal;line-height:1.35} .wa-actions{flex-wrap:wrap} @media(max-width:640px){#waTemplateBtn{width:100%;justify-content:center}}
