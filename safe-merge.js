@@ -12,7 +12,7 @@
   const equal=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
   const noKey=(o,k)=>{const n={...o};delete n[k];return n};
   function build(local,cloud){
-    if(!(local instanceof Map)||!(cloud instanceof Map))return{ok:false,reason:'Data bukan Map dokumen Firestore.',issues:[]};
+    if(!(local instanceof Map)||!(cloud instanceof Map))return{ok:false,reason:'Data bukan Map dokumen Cloud.',issues:[]};
     const localOnly=[...local.keys()].filter(k=>!cloud.has(k));
     const cloudOnly=[...cloud.keys()].filter(k=>!local.has(k));
     if(localOnly.length||cloudOnly.length)return{ok:false,reason:`Jumlah dokumen belum sama (hanya HP ${localOnly.length}, hanya cloud ${cloudOnly.length}). Tidak ada dokumen yang boleh dihapus.`,issues:[]};

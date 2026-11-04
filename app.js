@@ -1,6 +1,6 @@
 /* SalesPulse Area 12 Toko — terpisah dari aplikasi RPM per-brand. */
 (()=>{'use strict';
-const KEY='salespulse_area12_v1';const UI_PENDING_KEY='rpmarea_shared_ui_pending_v11_'+(window.RPM_AREA_FIREBASE?.workspaceId||'rpm-area-12');const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const KEY='salespulse_area12_v1';const UI_PENDING_KEY='rpmarea_shared_ui_pending_v11_'+(window.RPM_AREA_SUPABASE?.workspaceId||'rpm-area-12');const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const dayNames=['Sen','Sel','Rab','Kam','Jum','Sab','Min'];const longMonths=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const defaults={appName:'SalesPulse Area',title:'Monitoring Penjualan 12 Toko',description:'Pantau pencapaian POINT setiap toko dibandingkan Time Factor mingguan.',area:'Area RPM'};
 const themes={neon:['Neon Lime','#a3fa64','#3dd5b3'],violet:['Electric Violet','#a679ff','#e472e5'],coral:['Coral Night','#ff806e','#ffb46a'],cyber:['Cyber Blue','#58b7ff','#55e4e8'],aurora:['Aurora','#7652e7','#11b9ca'],midnight:['Midnight','#7361ff','#152544'],ocean:['Ocean','#147ab6','#0fc5ac'],sunset:['Sunset','#eb7559','#f5ba60'],forest:['Forest','#168569','#b3ce59']};
