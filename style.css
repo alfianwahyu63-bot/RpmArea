@@ -556,3 +556,91 @@ body{color:var(--ink)}
 .quota-links{display:flex;flex-direction:column;gap:7px;font-size:11px;color:var(--muted)}
 .quota-links a{color:var(--accent);font-weight:800}
 @media(max-width:540px){.quota-metrics{grid-template-columns:1fr}.quota-card{padding:13px}.quota-heading h4{font-size:17px}}
+
+/* V26 — halaman Target 100% khusus, responsive dengan enam tombol navigasi. */
+.nav-modern .navbtn[data-page="goals"]{--nav-tone:#c1ff78}
+.goal-page-heading{align-items:flex-start;}
+.goal-page-heading .eyebrow{letter-spacing:.08em}
+.goal-page-heading p{max-width:780px}
+.goal-page-area{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.goal-metric-box{border:1px solid var(--border);background:var(--card);border-radius:16px;padding:17px 15px;min-width:0;box-shadow:var(--shadow)}
+.goal-metric-box span{color:var(--muted);font-size:10px;letter-spacing:.025em;font-weight:800;display:block}
+.goal-metric-box strong{display:block;color:var(--ink);font-size:clamp(20px,2.3vw,28px);line-height:1.25;margin:9px 0 4px;overflow-wrap:anywhere}
+.goal-metric-box small{font-size:11px;line-height:1.5;color:var(--muted)}
+.goal-metric-box.is-emphasis{background:color-mix(in srgb,var(--accent) 11%,var(--card));border-color:color-mix(in srgb,var(--accent) 42%,var(--border))}
+.goal-metric-box.is-emphasis strong{color:var(--accent)}
+.goal-page-filter{padding:15px 17px;margin-bottom:16px}
+.goal-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.goal-filter-grid label{font-size:12px;color:var(--muted);font-weight:850;display:grid;gap:8px;min-width:0}
+.goal-filter-grid select{background:var(--canvas);border:1px solid var(--border);border-radius:12px;color:var(--ink);padding:12px;min-height:48px;max-width:100%;font-weight:750;font-size:13px}
+.goal-filter-grid select:disabled{opacity:.55}
+.goal-subnote{margin:12px 0 0;color:var(--muted);font-size:11px;line-height:1.6}
+.goal-page-stores{margin:12px 0 18px}
+.goal-page-stores .goal-store-card{background:var(--card)}
+.goal-page-stores .goal-featured-store{grid-column:1/-1}
+.goal-featured-store .goal-store-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+.goal-featured-store .goal-store-metrics small{display:block;margin-top:5px;color:var(--muted);font-size:10px}
+.goal-store-selected{display:block;color:var(--accent);font-size:12px;font-weight:850;margin-top:12px}
+.goal-choose-store{margin-top:12px!important;display:block!important}
+.goal-brand-section,.goal-plu-section{margin:16px 0;padding:18px}
+.goal-brand-section[hidden],.goal-plu-section[hidden]{display:none!important}
+.goal-section-title{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.goal-section-title h3{font-size:20px;margin:5px 0 6px;line-height:1.3;color:var(--ink)}
+.goal-section-title p{margin:0;color:var(--muted);font-size:12px;line-height:1.6;max-width:720px}
+.goal-brand-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.goal-brand-card{min-width:0;border:1px solid var(--border);background:var(--canvas);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:11px}
+.goal-brand-card.is-selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.goal-brand-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.goal-brand-top>b{font-size:14px;color:var(--ink);overflow-wrap:anywhere}
+.goal-brand-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.goal-brand-stats>div{border:1px solid var(--border);background:var(--card);padding:8px;border-radius:10px;min-width:0}
+.goal-brand-stats span{color:var(--muted);font-size:10px;display:block;margin-bottom:5px}
+.goal-brand-stats b{font-size:15px;overflow-wrap:anywhere}
+.goal-brand-projection{font-size:11px;margin:0;line-height:1.5;color:var(--muted)}
+.goal-brand-projection b{color:var(--accent)}
+.goal-brand-assumption{font-size:10px;line-height:1.4;color:var(--muted)}
+.goal-brand-unavailable{color:var(--muted);font-size:11px;line-height:1.65}
+.goal-brand-button{margin-top:auto;width:100%;background:var(--card);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 36%,var(--border));border-radius:10px;padding:10px;min-height:39px;font-size:12px;font-weight:850}
+.goal-brand-card.is-selected .goal-brand-button{background:color-mix(in srgb,var(--accent) 15%,var(--card))}
+.goal-plan-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:17px}
+.goal-plan-summary .goal-metric-box{box-shadow:none;padding:12px}
+.goal-plan-summary .goal-metric-box strong{font-size:20px}
+.goal-draft-tag{font-size:10px;font-weight:900;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 35%,var(--border));padding:9px 11px;border-radius:999px;background:color-mix(in srgb,var(--accent) 9%,var(--card))}
+.goal-search-row{display:flex;justify-content:space-between;align-items:end;gap:15px;margin:0 0 10px;flex-wrap:wrap}
+.goal-plu-search{display:grid;gap:7px;max-width:470px;flex:1;min-width:220px;font-size:12px;color:var(--muted);font-weight:800}
+.goal-plu-search input{background:var(--canvas);border:1px solid var(--border);border-radius:12px;min-height:43px;padding:11px 13px;color:var(--ink);width:100%;font-size:14px}
+.goal-list-count{font-size:11px;font-weight:800;color:var(--muted)}
+.goal-plu-scroll{max-width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:15px;max-height:560px;overflow-y:auto}
+.goal-plu-table{border-collapse:collapse;min-width:760px;width:100%;text-align:left}
+.goal-plu-table th{position:sticky;top:0;background:var(--canvas);font-size:10px;white-space:nowrap;z-index:2;color:var(--muted);padding:12px;border-bottom:1px solid var(--border)}
+.goal-plu-table td{padding:11px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--ink);vertical-align:middle}
+.goal-plu-table tr:last-child td{border-bottom:0}
+.goal-plu-id{font-weight:900;color:var(--accent);font-size:13px}
+.goal-plu-description{font-size:11px;color:var(--ink);margin-top:4px;max-width:260px;overflow-wrap:anywhere}
+.goal-plu-brand{font-size:10px;color:var(--muted);margin-top:3px}
+.goal-currency,.goal-plu-number{white-space:nowrap;font-weight:750}
+.goal-hpp-warn{display:block;color:var(--bad);font-size:9px;margin-top:5px}
+.goal-plu-input{width:100px;min-height:43px;border:1px solid var(--border);border-radius:10px;background:var(--canvas);padding:8px 10px;color:var(--ink);font-size:16px;font-weight:900;text-align:center}
+.goal-plu-input:focus{border-color:var(--accent)}
+.goal-suggest-btn{border-radius:10px;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));border:1px solid color-mix(in srgb,var(--accent) 25%,var(--border));font-size:11px;font-weight:850;padding:10px;white-space:nowrap;min-height:40px}
+.goal-plan-actions{display:flex;gap:9px;flex-wrap:wrap;margin:17px 0 0}
+.goal-plan-actions .btn{white-space:normal;text-align:center}
+.goal-plu-section .goal-disclaimer{padding-top:8px}
+@media(max-width:1050px){.goal-page-area{grid-template-columns:repeat(2,minmax(0,1fr))}.goal-brand-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){
+ .goal-page-heading{gap:9px}.goal-page-area{gap:8px}.goal-metric-box{padding:12px}.goal-metric-box strong{font-size:20px}
+ .goal-filter-grid{grid-template-columns:minmax(0,1fr)}
+ .goal-page-stores{grid-template-columns:minmax(0,1fr)}.goal-brand-grid{grid-template-columns:minmax(0,1fr)}
+ .goal-brand-section,.goal-plu-section{padding:14px}.goal-brand-stats b{font-size:14px}
+ .goal-plan-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .goal-plan-summary .goal-metric-box strong{font-size:18px}
+ .goal-plan-actions .btn{width:100%}
+ /* Six navigation items fit Android 320-430px without horizontal clipping. */
+ .sidebar{padding-left:5px;padding-right:5px}
+ .sidebar nav.nav-modern{gap:1px;justify-content:space-between}
+ .nav-modern .navbtn{flex:1 1 0;min-width:0;width:auto;max-width:none;min-height:57px;padding:5px 1px;gap:1px}
+ .nav-modern .navbtn .nav-icon{width:24px;height:24px;flex:0 0 24px}
+ .nav-modern .navbtn .nav-icon svg{width:20px;height:20px}
+ .nav-modern .navbtn .nav-short{font-size:9px;letter-spacing:0}
+}
+@media(max-width:360px){.goal-page-area{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.goal-metric-box strong{font-size:18px}.nav-modern .navbtn .nav-short{font-size:8px}}
