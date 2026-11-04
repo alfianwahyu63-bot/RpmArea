@@ -1,8 +1,8 @@
 RPM AREA V22 — MIGRASI FIREBASE -> SUPABASE (HTML/CSS/JS)
 ===================================================
-STATUS: KODE TELAH DISIAPKAN. CLOUD BELUM AKTIF sampai konfigurasi
-Supabase, tabel SQL, dan akun anggota dibuat. Tidak ada kredensial
-Supabase yang dipakai atau diuji pada paket ini.
+STATUS: PROJECT URL + PUBLISHABLE KEY SUDAH DIPASANG di supabase-config.js.
+Database dan anggota telah disiapkan pengguna menurut screenshot.
+Belum dideploy dan belum diuji melalui koneksi backend langsung.
 
 A. SELAMATKAN DATA SEBELUM MENGGANTI VERSI
 1. Di SETIAP HP yang pernah mengisi QTY, buka aplikasi lama pada URL
@@ -75,9 +75,8 @@ D. CATATAN TEKNIS DAN KEAMANAN
   HTML/JavaScript publik. Supabase juga memiliki batas paket gratis.
 - Perangkat yang offline tetap menyimpan ke localStorage; sinkronisasi
   kembali ketika online dan tanpa konflik data.
-- Kode belum diuji dengan backend nyata sebab Project URL, key, UID,
-  dan akses Supabase belum diberikan. Validasi akhir harus dilakukan
-  setelah setup di proyek Anda selesai.
+- Project URL dan publishable key telah diisi. Validasi login, akses,
+  dan sinkronisasi nyata belum dilakukan; uji setelah deploy ke hosting.
 
 PENTING: Proses ini tidak melakukan impor otomatis dari Firestore ke
 Supabase. Cadangan JSON harus diperiksa terlebih dahulu agar data dari
