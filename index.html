@@ -5,6 +5,7 @@
 <title>RpmArea · Weekly Performance</title>
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" href="./icon-192.png"><link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="stylesheet" href="./style.css?v=27">
+<link rel="stylesheet" href="./insights.css?v=28">
 </head>
 <body data-theme="neon">
 <div id="app" class="app">
@@ -58,6 +59,18 @@
      <div class="daily-report-filters" role="group" aria-label="Filter status input toko"><button type="button" class="daily-filter selected" data-report-filter="all" aria-pressed="true">Semua Toko</button><button type="button" class="daily-filter" data-report-filter="missing" aria-pressed="false">Belum Input</button><button type="button" class="daily-filter" data-report-filter="done" aria-pressed="false">Sudah Input</button></div>
      <div class="daily-report-list" id="dailyReportList"></div><p id="dailyReportHelp" class="daily-report-help"></p>
    </section>
+   <section class="surface insight-panel" aria-labelledby="insightForecastTitle">
+    <div class="insight-heading"><div><span class="insight-kicker">✦ ANALISIS RPM • V28</span><h3 id="insightForecastTitle">Prediksi akhir minggu &amp; perbandingan hari</h3><p>Estimasi linear berdasarkan pencapaian kumulatif sampai tanggal pilihan.</p></div><span class="pill muted" id="insightForecastAsOf">—</span></div>
+    <div id="insightForecast" class="insight-grid" aria-live="polite"></div>
+    <div class="insight-actions"><button class="btn primary" id="insightCopyWA" type="button">📋 Salin Laporan WA</button><button class="btn secondary" id="insightShareWA" type="button">↗ Bagikan ke WhatsApp</button></div>
+    <p class="insight-note">Angka proyeksi bukan hasil pasti. Target 100% adalah POINT akhir minggu, bukan Time Factor harian. Laporan menggunakan data lokal yang tampil saat ini; cek status sinkronisasi sebelum membagikan.</p>
+   </section>
+   <section class="surface insight-panel" aria-labelledby="insightRankingTitle">
+    <div class="insight-heading"><div><span class="insight-kicker">🏆 URUTAN PRIORITAS</span><h3 id="insightRankingTitle">Ranking 12 toko &amp; analisis brand</h3><p>Ranking berdasarkan POINT kumulatif; filter brand hanya memengaruhi tabel di bagian ini.</p></div><label class="insight-dropdown">Filter brand <select id="insightBrandFilter" aria-label="Filter ranking toko berdasarkan brand"><option value="">Semua brand</option></select></label></div>
+    <div id="insightRanking" class="insight-rank"></div>
+    <details class="insight-brand-risk"><summary>Analisis brand yang tertinggal dari Time Factor</summary><div id="insightBrandRisk" class="insight-brand-risk-list"></div></details>
+    <div id="insightWarnings" class="insight-alerts" aria-live="polite"></div>
+   </section>
    <section class="surface resume-panel" data-layout-key="resume"><div class="panel-header"><div><h3 id="resumeTitle">📊 Resume RPM per Brand · 12 Toko</h3><p id="resumeDescription">POINT per brand, status terhadap TF, rata-rata POINT dan pencapaian area berbobot target gabungan.</p></div><div class="inline-actions resume-export-actions"><span class="pill muted" id="resumeStylePreview" aria-live="polite">Mode unduh: Tabel Klasik</span><label class="select-wrap compact">Template <select id="resumeStyle" aria-label="Pilih template gambar resume"><option value="classic">Tabel Klasik</option><option value="dark">Dark Neon</option><option value="glass">Glass Soft</option><option value="executive">Executive Navy</option><option value="minimal">Minimal White</option><option value="emerald">Emerald Pro</option><option value="sunset">Sunset Coral</option></select></label><button id="exportResumePng" class="btn primary" type="button">🖼️ Buat Gambar PNG</button></div></div><div class="table-scroll"><table class="resume-table" id="resumeTable"></table></div><p class="resume-note" id="resumeNote">ACV AREA dihitung dari total aktual seluruh toko ÷ total target seluruh toko, bukan rata-rata persentase toko. Brand tanpa target QTY atau NS ditampilkan —.</p></section>
    <div class="dashboard-grid" data-layout-key="charts">
     <section class="surface" data-layout-key="storeChart" aria-label="Grafik POINT toko"><div class="panel-header"><div><h3 id="chartTitle">POINT per Toko</h3><p id="chartDescription">Perbandingan POINT 50/50 terhadap target Time Factor</p></div><span class="pill muted" id="chartCount">0 / 12 TOKO</span></div><div id="pointBars" class="barlist"></div></section>
@@ -76,6 +89,11 @@
     </section>
     <div id="goalStoreCards" class="goal-store-grid goal-page-stores"></div>
     <section class="surface goal-brand-section" id="goalBrandSection" hidden><div class="goal-section-title"><div><span class="goal-kicker">📦 RINCIAN PER BRAND</span><h3>Target &amp; kekurangan setiap brand</h3><p>Target per brand berasal dari Excel TARGET PERTOKO. Tanpa target brand yang lengkap, POINT tidak dapat dihitung secara akurat.</p></div></div><div id="goalBrandCards" class="goal-brand-grid"></div></section>
+    <section class="surface insight-advisor" id="goalAdvisor" aria-label="Smart Target Advisor" hidden>
+     <div class="insight-heading"><div><span class="insight-kicker">💡 SMART TARGET ADVISOR</span><h3>Rekomendasi PLU untuk POINT 100%</h3><p>Simulasi berdasarkan HPP/unit, QTY aktual dan target toko/brand. Tidak mempertimbangkan stok, permintaan, dan kemampuan jual.</p></div></div>
+     <div id="goalAdvisorCards" class="insight-advisor-cards"></div>
+     <p class="insight-note">Tekan <b>Isi simulasi</b> untuk memasukkan saran ke rencana PLU. Tidak menyimpan penjualan otomatis.</p>
+    </section>
     <section class="surface goal-plu-section" id="goalPluSection" hidden>
        <div class="goal-section-title"><div><span class="goal-kicker">🧮 RENCANA PENJUALAN PER PLU</span><h3 id="goalPluTitle">Tambahan QTY per PLU</h3><p>Isi kolom <b>Rencana tambahan</b>, lalu cek perubahan QTY, Net Sales, dan POINT secara langsung. Rekomendasi dihitung dari HPP/NS per unit di master.</p></div><span class="goal-draft-tag">SIMULASI • BELUM DISIMPAN</span></div>
        <div class="goal-plan-summary" id="goalPlanSummary" aria-live="polite"></div>
@@ -88,6 +106,7 @@
   <section id="view-input" class="view" aria-labelledby="inputHeading">
     <div class="sectionhead"><div><div class="eyebrow">INPUT HARIAN</div><h2 id="inputHeading">Input penjualan 7 hari</h2><p>PLU, deskripsi, dan HPP cukup satu kali per minggu. Isi QTY langsung pada kolom Senin–Minggu.</p></div><div class="inline-actions"><label class="select-wrap">Toko <select id="inputStore"></select></label><button id="addPlu" class="btn primary" type="button">＋ PLU</button></div></div>
     <div id="inputSummary" class="input-summary"></div>
+    <div id="inputQualityAlerts" class="insight-quality" aria-live="polite"></div>
     <!-- WhatsApp text importer: daily quantity, target and item catalog remain weekly -->
     <section class="surface wa-panel" id="waImportPanel" aria-labelledby="waHeading">
       <div class="panel-header"><div><span class="wa-kicker">⚡ INPUT CEPAT • CHAT WHATSAPP</span><h3 id="waHeading">Tempel Laporan RPM per PLU</h3><p>Format baru: <b>Periode: 2-8 Nov</b>, <b>Kode Toko: SC94</b>, lalu <b>✅*BRAND*</b> dan <b>PLU/QTY</b>. Format lama tetap bisa digunakan. Pilih tanggal → periksa → simpan.</p></div><span class="pill muted">Khusus minggu terpilih</span></div>
@@ -168,7 +187,7 @@ Kode Toko: SC94
 <dialog id="textDialog" class="modal"><div class="modal-head"><div><small>PERSONALISASI</small><h3>Judul & Keterangan</h3></div><button class="close" type="button" data-close="textDialog">×</button></div><form id="editTextForm"><label>Nama Aplikasi<input name="appName" maxlength="50"></label><label>Judul Utama<input name="title" maxlength="90"></label><label>Keterangan<textarea name="description" rows="3" maxlength="300"></textarea></label><label>Nama Area<input name="area" maxlength="50"></label><button class="btn primary block" type="submit">Simpan Teks</button></form></dialog>
 <dialog id="storeDialog" class="modal"><div class="modal-head"><div><small>MASTER TOKO</small><h3 id="storeDialogTitle">Tambah Toko</h3></div><button class="close" type="button" data-close="storeDialog">×</button></div><form id="storeForm"><input type="hidden" name="oldCode"><label>Kode Toko<input name="code" required maxlength="40" placeholder="Contoh: RPM01"></label><label>Nama Toko<input name="name" required maxlength="100" placeholder="Nama toko"></label><label>Target QTY (1 minggu)<input name="targetQty" required type="number" min="0" step="any"></label><label>Target NS (1 minggu)<input name="targetNS" required type="number" min="0" step="any"></label><button class="btn primary block" type="submit">Simpan Toko</button></form></dialog>
 <dialog id="pluDialog" class="modal"><div class="modal-head"><div><small>KATALOG MINGGUAN</small><h3>Tambah PLU</h3></div><button class="close" type="button" data-close="pluDialog">×</button></div><form id="pluForm"><label>PLU<input name="plu" maxlength="50" required placeholder="Kode PLU"></label><label>Brand (opsional)<input name="brand" maxlength="70"></label><label>Deskripsi Produk<input name="description" maxlength="180" required></label><label>HPP / Harga per unit<input name="hpp" type="number" min="0" step="any" value="0"></label><button class="btn primary block" type="submit">Tambahkan</button></form></dialog>
-<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>SUPABASE · MULTI PENGGUNA <span class="rpm-build-pill">V27 · SUPABASE</span></small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-quota-tip">🟢 V27 memakai Supabase: pemeriksaan data berubah setiap 90 detik saat online. Sinkronisasi akan aktif setelah konfigurasi Supabase, tabel SQL, dan akun anggota disiapkan. Jangan hapus data HP.</p><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Menyiapkan koneksi Supabase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Supabase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
+<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>SUPABASE · MULTI PENGGUNA <span class="rpm-build-pill">V28 · SUPABASE</span></small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-quota-tip">🟢 V27 memakai Supabase: pemeriksaan data berubah setiap 90 detik saat online. Sinkronisasi akan aktif setelah konfigurasi Supabase, tabel SQL, dan akun anggota disiapkan. Jangan hapus data HP.</p><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Menyiapkan koneksi Supabase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Supabase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
   <section class="cloud-progress" id="cloudProgress" hidden aria-label="Kemajuan penyimpanan cloud">
     <div class="cloud-progress-heading">
       <div><small>PROGRES SINKRONISASI</small><strong id="cloudProgressTitle">Menyiapkan data...</strong></div>
@@ -215,7 +234,8 @@ Kode Toko: SC94
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./data-guard.js?v=20"></script>
 <script src="./safe-merge.js?v=20"></script>
-<script src="./app.js?v=26"></script>
+<script src="./insights.js?v=28"></script>
+<script src="./app.js?v=28"></script>
 <script src="./supabase-rest.js?v=22"></script>
 <script type="module" src="./cloud.js?v=27"></script>
 <script src="./quota-trend.js?v=27"></script>
