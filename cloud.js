@@ -49,6 +49,14 @@ try{
  let signedUser=null;
  const auth={get currentUser(){return signedUser}};
  const rest=transport.makeClient({supabase:sb,workspaceId:cfg.workspaceId});
+ window.RpmQuotaAPI={
+  readDatabase:async()=>{
+   const {data,error}=await sb.rpc('rpm_database_usage',{p_workspace_id:cfg.workspaceId});
+   if(error)throw error;
+   if(!data||!Number.isFinite(Number(data.bytes)))throw new Error('Respons ukuran database tidak valid');
+   return {bytes:Number(data.bytes),checkedAt:new Date().toISOString()};
+  }
+ };
  const same=transport.same;
  const normalize=value=>Array.isArray(value)?value.map(normalize):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,normalize(value[k])])):value;
  const norm=v=>JSON.stringify(normalize(v));
