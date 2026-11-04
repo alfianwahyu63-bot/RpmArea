@@ -1,0 +1,75 @@
+-- RPM Area V27: catat ukuran database untuk analisis pertumbuhan harian.
+-- PENTING: Jalankan SEKALI di Supabase > SQL Editor > New query > Run.
+ -- Aman dijalankan ulang. Tidak menyentuh QTY, PLU, target, Net Sales, atau tabel transaksi.
+-- Perangkat hanya mengirim permintaan pengukuran. Riwayat dibagi antar-HP lewat database.
+-- Setiap tanggal WIB tercatat satu baris; pembaruan maksimum 1x/jam.
+-- Pengukuran hanya terjadi ketika salah satu pengguna aplikasi online dan login;
+-- BUKAN jadwal otomatis di server saat semua HP offline.
+
+CREATE TABLE IF NOT EXISTS public.rpm_quota_daily (
+  sample_date date PRIMARY KEY,
+  size_bytes bigint NOT NULL CHECK (size_bytes >= 0),
+  sampled_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.rpm_quota_daily ENABLE ROW LEVEL SECURITY;
+-- Riwayat hanya dibaca lewat fungsi RPC yang melakukan cek keanggotaan.
+REVOKE ALL ON TABLE public.rpm_quota_daily FROM PUBLIC, anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.rpm_quota_daily_status(p_workspace_id text)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_uid uuid := (SELECT auth.uid());
+  v_bytes bigint;
+  v_date date := (pg_catalog.now() AT TIME ZONE 'Asia/Jakarta')::date;
+  v_history jsonb;
+BEGIN
+  IF v_uid IS NULL OR p_workspace_id IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.rpm_members m
+    WHERE m.workspace_id = p_workspace_id AND m.user_id = v_uid
+  ) THEN
+    RAISE EXCEPTION USING errcode='42501', message='Login anggota workspace diperlukan';
+  END IF;
+
+  -- Ukuran PostgreSQL proyek, bukan pemakaian penjualan sehari ataupun angka tagihan Supabase.
+  v_bytes := pg_catalog.pg_database_size(pg_catalog.current_database());
+
+  INSERT INTO public.rpm_quota_daily (sample_date, size_bytes, sampled_at)
+  VALUES (v_date, v_bytes, pg_catalog.now())
+  ON CONFLICT (sample_date) DO UPDATE
+    SET size_bytes=EXCLUDED.size_bytes, sampled_at=EXCLUDED.sampled_at
+    WHERE public.rpm_quota_daily.sampled_at < pg_catalog.now() - interval '1 hour';
+
+  SELECT COALESCE(pg_catalog.jsonb_agg(
+    pg_catalog.jsonb_build_object(
+      'date', t.sample_date,
+      'bytes', t.size_bytes,
+      'sampledAt', t.sampled_at
+    ) ORDER BY t.sample_date
+  ), '[]'::jsonb)
+  INTO v_history
+  FROM (
+    SELECT sample_date, size_bytes, sampled_at
+    FROM public.rpm_quota_daily
+    ORDER BY sample_date DESC LIMIT 90
+  ) AS t;
+
+  RETURN pg_catalog.jsonb_build_object(
+    'bytes', v_bytes,
+    'checkedAt', pg_catalog.now(),
+    'timeZone', 'Asia/Jakarta',
+    'history', v_history
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.rpm_quota_daily_status(text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.rpm_quota_daily_status(text) TO authenticated;
+
+-- Setelah berhasil: buka aplikasi V27 > Cloud, login jika perlu, tekan Perbarui DB.
+-- Hari pertama baru menyimpan titik awal. Prediksi butuh setidaknya dua tanggal
+-- pengukuran dalam 7 hari terakhir. Jika tidak ada HP online, akan ada jeda data.

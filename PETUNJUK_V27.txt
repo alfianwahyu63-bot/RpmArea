@@ -1,0 +1,14 @@
+RPM AREA V27 — MONITOR PERTUMBUHAN DATABASE SUPABASE
+
+1. Backup JSON dari setiap HP sebelum mengganti aplikasi GitHub.
+2. Unggah SEMUA isi folder RpmArea-main ke GitHub Pages, termasuk quota-trend.js, quota.js, cloud.js, index.html, style.css, sw.js. File sebelumnya yang tidak ada di ZIP boleh dibiarkan kecuali changelog.
+3. Supabase > SQL Editor > New query: buka SQL_KUOTA_RPM_V27.txt, salin semuanya, tekan Run. Tunggu tulisan Success.
+4. Buka aplikasi V27, pastikan login Supabase dan Cloud: Aktif. Buka Cloud > Perbarui DB. Riwayat 1 hari akan muncul.
+5. Besok, jika aplikasi dibuka saat online dan login, pengukuran baru dibuat sekali per hari secara otomatis. Jika semua HP offline/tidak dibuka, tidak ada pengukuran hari tersebut; bisa tekan Perbarui DB.
+6. Sesudah ada minimal dua tanggal pengukuran dalam 7 hari terakhir, muncul rata-rata pertumbuhan harian dan estimasi sisa hari sampai DB 500 MB. Jika pertumbuhan <= 0, tidak ada estimasi tanggal habis.
+7. Indikator akan memberi peringatan 70%, 85%, 95%. Riwayat hanya untuk database; egress tetap manual dari Dashboard Supabase.
+8. Data QTY, NS, PLU, target, template PNG, tab Target, login, dan backup tidak diubah. SQL ini tidak mengubah tabel penjualan.
+9. 12 MB bukan "pemakaian per hari"; itu ukuran keseluruhan PostgreSQL. Prediksi hanyalah perhitungan linear berdasarkan riwayat, bukan garansi.
+10. Jika belum menjalankan SQL V27, pembacaan ukuran DB yang lama tetap dapat berjalan, tetapi riwayat/prediksi belum aktif.
+
+CATATAN KEAMANAN: SQL menggunakan SECURITY DEFINER dengan auth.uid() dan validasi rpm_members; hanya akun anggota workspace dapat mengambil ukuran/riwayat. Tidak boleh menaruh service_role/secret key dalam browser.

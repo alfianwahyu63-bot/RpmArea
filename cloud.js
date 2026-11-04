@@ -50,11 +50,18 @@ try{
  const auth={get currentUser(){return signedUser}};
  const rest=transport.makeClient({supabase:sb,workspaceId:cfg.workspaceId});
  window.RpmQuotaAPI={
+  get authorized(){return !!signedUser&&connected},
   readDatabase:async()=>{
    const {data,error}=await sb.rpc('rpm_database_usage',{p_workspace_id:cfg.workspaceId});
    if(error)throw error;
    if(!data||!Number.isFinite(Number(data.bytes)))throw new Error('Respons ukuran database tidak valid');
    return {bytes:Number(data.bytes),checkedAt:new Date().toISOString()};
+  },
+  readTrend:async()=>{
+   const {data,error}=await sb.rpc('rpm_quota_daily_status',{p_workspace_id:cfg.workspaceId});
+   if(error)throw error;
+   if(!data||!Number.isFinite(Number(data.bytes))||!Array.isArray(data.history))throw new Error('Respons riwayat database tidak valid');
+   return {bytes:Number(data.bytes),checkedAt:data.checkedAt||new Date().toISOString(),history:data.history};
   }
  };
  const same=transport.same;
@@ -250,6 +257,7 @@ try{
    else setActive();
    // V22: baca perubahan saja, bukan membaca ulang seluruh kumpulan dokumen.
    pollTimer=setInterval(()=>refresh(),POLL_MS);
+   window.dispatchEvent(new Event('rpmarea:cloud-authorized')); // V27: satu sampling kuota harian saat aplikasi digunakan.
   }catch(err){if(current===version){connected=false;onError(err,'Tidak dapat menghubungkan Supabase')}}
  }
  async function reconcile(){

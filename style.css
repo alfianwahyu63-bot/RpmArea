@@ -644,3 +644,27 @@ body{color:var(--ink)}
  .nav-modern .navbtn .nav-short{font-size:9px;letter-spacing:0}
 }
 @media(max-width:360px){.goal-page-area{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.goal-metric-box strong{font-size:18px}.nav-modern .navbtn .nav-short{font-size:8px}}
+
+/* V27 – panel ringkas pemantauan pertumbuhan database & proyeksi. */
+.quota-trend{margin-top:14px;padding:13px;border:1px solid var(--line);border-radius:15px;background:color-mix(in srgb,var(--card) 70%,transparent);min-width:0}
+.quota-trend-head{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:12px}
+.quota-trend-head h5{margin:0;font-size:14px;color:var(--text)}
+.quota-trend-head span{font-size:10px;color:var(--muted)}
+.quota-trend-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.quota-trend-stat{padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--card);min-width:0;display:flex;flex-direction:column;gap:6px}
+.quota-trend-stat small{font-size:10px;color:var(--muted);line-height:1.4}
+.quota-trend-stat b{font-size:17px;overflow-wrap:anywhere;color:var(--accent);line-height:1.25}
+.quota-trend-stat span{font-size:10px;color:var(--muted);line-height:1.45}
+.quota-trend-warning{padding:10px;border-radius:10px;font-size:11px;line-height:1.5;margin:12px 0 0;background:#26c78d16}
+.quota-trend-warning[data-level=warning]{background:#f1b96520;color:#ffd9a0}
+.quota-trend-warning[data-level=danger],.quota-trend-warning[data-level=critical]{background:#ef667522;color:#ffc0c7}
+.quota-trend-warning[data-level=unknown]{background:var(--subtle);color:var(--muted)}
+.quota-trend-history{margin:11px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.quota-trend-history summary{cursor:pointer;padding:10px;font-size:11px;font-weight:700;list-style-position:inside}
+.quota-trend-table{overflow-x:auto;padding:5px 9px 9px}
+.quota-trend-table p{font-size:11px;line-height:1.5;color:var(--muted)}
+.quota-trend-table table{border-collapse:collapse;width:100%;min-width:240px;font-size:10px}
+.quota-trend-table th,.quota-trend-table td{text-align:left;padding:8px 5px;border-bottom:1px solid var(--line)}
+.quota-trend-table th{color:var(--muted)}
+.quota-trend-footnote{font-size:10px;line-height:1.7;color:var(--muted);margin:11px 0 0}
+@media(max-width:355px){.quota-trend-grid{grid-template-columns:1fr}.quota-trend{padding:10px}.quota-trend-stat b{font-size:16px}}

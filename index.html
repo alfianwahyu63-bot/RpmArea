@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c38"><meta name="description" content="Monitoring POINT QTY 50% + Net Sales 50% untuk 12 toko dalam satu area, dengan input 7 hari dan sinkronisasi opsional.">
 <title>RpmArea · Weekly Performance</title>
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" href="./icon-192.png"><link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./style.css?v=26">
+<link rel="stylesheet" href="./style.css?v=27">
 </head>
 <body data-theme="neon">
 <div id="app" class="app">
@@ -168,7 +168,7 @@ Kode Toko: SC94
 <dialog id="textDialog" class="modal"><div class="modal-head"><div><small>PERSONALISASI</small><h3>Judul & Keterangan</h3></div><button class="close" type="button" data-close="textDialog">×</button></div><form id="editTextForm"><label>Nama Aplikasi<input name="appName" maxlength="50"></label><label>Judul Utama<input name="title" maxlength="90"></label><label>Keterangan<textarea name="description" rows="3" maxlength="300"></textarea></label><label>Nama Area<input name="area" maxlength="50"></label><button class="btn primary block" type="submit">Simpan Teks</button></form></dialog>
 <dialog id="storeDialog" class="modal"><div class="modal-head"><div><small>MASTER TOKO</small><h3 id="storeDialogTitle">Tambah Toko</h3></div><button class="close" type="button" data-close="storeDialog">×</button></div><form id="storeForm"><input type="hidden" name="oldCode"><label>Kode Toko<input name="code" required maxlength="40" placeholder="Contoh: RPM01"></label><label>Nama Toko<input name="name" required maxlength="100" placeholder="Nama toko"></label><label>Target QTY (1 minggu)<input name="targetQty" required type="number" min="0" step="any"></label><label>Target NS (1 minggu)<input name="targetNS" required type="number" min="0" step="any"></label><button class="btn primary block" type="submit">Simpan Toko</button></form></dialog>
 <dialog id="pluDialog" class="modal"><div class="modal-head"><div><small>KATALOG MINGGUAN</small><h3>Tambah PLU</h3></div><button class="close" type="button" data-close="pluDialog">×</button></div><form id="pluForm"><label>PLU<input name="plu" maxlength="50" required placeholder="Kode PLU"></label><label>Brand (opsional)<input name="brand" maxlength="70"></label><label>Deskripsi Produk<input name="description" maxlength="180" required></label><label>HPP / Harga per unit<input name="hpp" type="number" min="0" step="any" value="0"></label><button class="btn primary block" type="submit">Tambahkan</button></form></dialog>
-<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>SUPABASE · MULTI PENGGUNA <span class="rpm-build-pill">V26 · SUPABASE</span></small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-quota-tip">🟢 V26 memakai Supabase: pemeriksaan data berubah setiap 90 detik saat online. Sinkronisasi akan aktif setelah konfigurasi Supabase, tabel SQL, dan akun anggota disiapkan. Jangan hapus data HP.</p><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Menyiapkan koneksi Supabase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Supabase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
+<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>SUPABASE · MULTI PENGGUNA <span class="rpm-build-pill">V27 · SUPABASE</span></small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-quota-tip">🟢 V27 memakai Supabase: pemeriksaan data berubah setiap 90 detik saat online. Sinkronisasi akan aktif setelah konfigurasi Supabase, tabel SQL, dan akun anggota disiapkan. Jangan hapus data HP.</p><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Menyiapkan koneksi Supabase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Supabase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
   <section class="cloud-progress" id="cloudProgress" hidden aria-label="Kemajuan penyimpanan cloud">
     <div class="cloud-progress-heading">
       <div><small>PROGRES SINKRONISASI</small><strong id="cloudProgressTitle">Menyiapkan data...</strong></div>
@@ -192,6 +192,18 @@ Kode Toko: SC94
   <div class="quota-metric"><div class="quota-metric-head"><b>Database <span class="quota-tag">AUTO*</span></b><span id="quotaDbPercent">—</span></div><div class="quota-bar"><i id="quotaDbBar"></i></div><div class="quota-numbers"><span>Terpakai <b id="quotaDbUsed">—</b></span><span>Sisa <b id="quotaDbLeft">—</b></span></div><small>Batas paket Free: 500 MB per proyek.</small></div>
   <div class="quota-metric"><div class="quota-metric-head"><b>Egress <span class="quota-tag manual">MANUAL</span></b><span id="quotaEgressPercent">—</span></div><div class="quota-bar"><i id="quotaEgressBar"></i></div><div class="quota-numbers"><span>Terpakai <b id="quotaEgressUsed">—</b></span><span>Sisa <b id="quotaEgressLeft">—</b></span></div><small>Batas paket Free: 5 GB/organisasi per periode.</small><label class="quota-egress-input">Egress terpakai (MB) dari Dashboard <input id="quotaEgressInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Misalnya 125,5"></label><small id="quotaEgressDate">Belum dicatat di perangkat ini.</small></div>
  </div>
+ <section class="quota-trend" aria-labelledby="quotaTrendHeading">
+  <div class="quota-trend-head"><h5 id="quotaTrendHeading">📈 Pertumbuhan DB & prediksi kuota</h5><span id="quotaTrendSampleCount">Belum ada riwayat</span></div>
+  <div class="quota-trend-grid">
+   <div class="quota-trend-stat"><small>Perubahan antar tanggal terakhir</small><b id="quotaDailyDelta">—</b><span id="quotaDailyDetail">Perlu 2 tanggal pengukuran</span></div>
+   <div class="quota-trend-stat"><small>Rata-rata 7 hari terakhir</small><b id="quotaAverage7d">—</b><span id="quotaAverageDetail">Perlu riwayat</span></div>
+   <div class="quota-trend-stat"><small>Estimasi hari tersisa</small><b id="quotaDaysLeft">—</b><span id="quotaEstimateNote">Mengikuti pertumbuhan DB</span></div>
+   <div class="quota-trend-stat"><small>Perkiraan mencapai 500 MB</small><b id="quotaEstimatedDate">—</b><span>Hanya proyeksi, bukan jaminan</span></div>
+  </div>
+  <p id="quotaTrendWarning" class="quota-trend-warning" data-level="unknown">Belum ada pembacaan database.</p>
+  <details class="quota-trend-history"><summary>Riwayat 7 pengukuran terakhir</summary><div id="quotaTrendHistory" class="quota-trend-table">—</div></details>
+  <p class="quota-trend-footnote">Angka Database terpakai menunjukkan <b>total ukuran PostgreSQL</b>, bukan ukuran input pada satu hari. Riwayat hanya terisi saat aplikasi dipakai online dengan akun login (maksimal pembaruan 1×/jam). Tanggal mengikuti WIB. Prediksi membutuhkan 2 tanggal dalam 7 hari. Pertumbuhan dapat naik/turun karena aktivitas PostgreSQL; lihat Dashboard Usage untuk kuota resmi.</p>
+ </section>
  <p id="quotaStatus" class="quota-status" role="status" aria-live="polite">Belum diperiksa. Login Supabase lalu tekan Perbarui DB.</p>
  <div class="quota-links"><a id="quotaUsageLink" href="https://supabase.com/dashboard/org/_/usage" target="_blank" rel="noopener noreferrer">↗ Lihat Usage resmi Supabase</a><span>Estimasi DB* ≠ tagihan resmi. Kuota lain (MAU, Storage, Realtime) lihat Dashboard.</span></div>
 </section>
@@ -205,6 +217,7 @@ Kode Toko: SC94
 <script src="./safe-merge.js?v=20"></script>
 <script src="./app.js?v=26"></script>
 <script src="./supabase-rest.js?v=22"></script>
-<script type="module" src="./cloud.js?v=25"></script>
-<script type="module" src="./quota.js?v=25"></script>
+<script type="module" src="./cloud.js?v=27"></script>
+<script src="./quota-trend.js?v=27"></script>
+<script type="module" src="./quota.js?v=27"></script>
 </body></html>
