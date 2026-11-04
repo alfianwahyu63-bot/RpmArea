@@ -1,0 +1,10 @@
+RPM AREA V24 — PERBAIKAN TIME FACTOR & TEMPLATE PNG
+
+1. Tata letak Time Factor di HP dirapikan: persentase, navigasi tanggal, kembali hari ini, dan keterangan terpisah.
+2. Ada 7 template ekspor tabel PNG: Tabel Klasik, Dark Neon, Glass Soft, Executive Navy, Minimal White, Emerald Pro, Sunset Coral.
+3. Semua template memakai perhitungan sampai tanggal monitor yang dipilih, tanpa menambah/mengubah QTY.
+4. File changelog dan panduan lama telah dibuang. File pemulihan Firebase tetap ada agar migrasi data lama aman.
+5. Deploy: unggah semua file dari dalam folder RpmArea-main ke root repository, bukan foldernya saja. Jika file lama sudah ada di hosting, hapus changelog lama di repository secara terpisah.
+6. Penting: backup data lokal tiap HP sebelum upgrade. Pastikan login & sinkronisasi Supabase normal sebelum hapus data lama.
+7. Untuk pemasangan ala APK: website sudah menggunakan manifest PWA. Di Chrome Android, buka aplikasi lalu menu (⋮) > Tambahkan ke Layar Utama/Instal Aplikasi.
+8. Untuk APK yang sebenarnya perlu build Android melalui Capacitor + Android Studio/SDK. Tidak ada APK dalam ZIP ini.

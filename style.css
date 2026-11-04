@@ -456,3 +456,31 @@ body{color:var(--ink)}
 .tf-box .tf-hint{color:#d4e1e7;font-size:10px;max-width:none;line-height:1.4;margin-top:4px}
 @media(max-width:850px){.hero{flex-direction:column;align-items:stretch}.tf-box{width:100%;flex:0 1 auto;min-width:0}.tf-date-picker{max-width:365px;margin:8px auto 0}}
 @media(max-width:520px){.tf-box{padding:16px 12px 12px}.tf-selected-date{font-size:12px!important}.tf-box .tf-hint{font-size:10px}}
+
+
+/* V24: Time Factor — fix flex horizontal dari CSS versi mobile lama.
+   Semua elemen ditata vertikal, tombol tanggal dalam satu baris yang jelas. */
+.hero > div:first-child {min-width:0; position:relative; z-index:1}
+.tf-box {
+  box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr);
+  flex:0 1 340px;align-content:start;justify-content:stretch;justify-items:stretch;
+  gap:0;min-width:0;width:340px;max-width:100%;
+  padding:18px 20px 16px;text-align:center;overflow:hidden;
+}
+.tf-box > small {display:block;line-height:1.5;letter-spacing:.08em;color:#e2f1e7}
+.tf-box .tf-value{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;column-gap:11px;row-gap:2px;margin:4px 0 11px;min-width:0}
+.tf-box .tf-value strong{display:inline-block;font-size:clamp(30px,4vw,42px);line-height:1.16;letter-spacing:-1px;margin:0;white-space:nowrap}
+.tf-box .tf-value span{display:inline-block;font-size:11px;font-weight:850;white-space:nowrap;color:#d0dfd8}
+.tf-box .tf-date-picker{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;align-items:center;gap:9px;min-width:0;width:100%;max-width:375px;margin:0 auto;border-top:1px solid #ffffff2a;padding-top:12px}
+.tf-box .tf-arrow{width:40px;height:40px;min-width:0;line-height:1;font-size:27px;color:#fff;background:#ffffff12;border:1px solid #ffffff3a;border-radius:12px}
+.tf-box .tf-selected-date{display:block;min-width:0;max-width:100%;font-size:clamp(12px,2.9vw,15px)!important;line-height:1.35;font-weight:800;color:#f3fff5!important;white-space:normal;overflow-wrap:normal;text-align:center}
+.tf-box .tf-today{display:block;justify-self:center;width:auto;min-height:34px;margin:10px auto 3px;padding:5px 12px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:999px;background:color-mix(in srgb,var(--accent) 13%,transparent);font-weight:800;font-size:11px;line-height:1.4;white-space:normal}
+.tf-box .tf-hint{display:block;max-width:100%;margin:5px auto 0;line-height:1.5;font-size:11px;color:#c3d5d2;text-align:center}
+@media(max-width:850px){.hero{align-items:stretch;flex-direction:column}.tf-box{flex:0 1 auto;width:100%;max-width:100%;margin:0 auto}}
+@media(max-width:520px){.hero{padding:20px 16px;gap:17px}.tf-box{display:grid;flex-direction:initial;align-items:initial;justify-content:stretch;gap:0;padding:17px 16px 16px}.tf-box .tf-value{margin:5px 0 12px}.tf-box .tf-value strong{font-size:clamp(31px,8vw,40px)}.tf-box .tf-hint{font-size:10.5px}.tf-box .tf-selected-date{font-size:13px!important}}
+@media(max-width:340px){.tf-box .tf-date-picker{gap:6px;grid-template-columns:36px minmax(0,1fr) 36px}.tf-box .tf-arrow{height:37px;width:36px}.tf-box .tf-selected-date{font-size:12px!important}}
+/* Dropdown template ekspor di layar HP tetap terbaca. */
+.resume-export-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.resume-export-actions .select-wrap{min-width:180px;max-width:100%}
+.resume-export-actions #resumeStyle{max-width:100%;min-width:145px}
+@media(max-width:680px){.resume-export-actions{width:100%;justify-content:stretch}.resume-export-actions .select-wrap{display:flex;flex:1 1 100%;justify-content:space-between;align-items:center}.resume-export-actions #resumeStyle{flex:1;max-width:calc(100% - 80px)}.resume-export-actions #exportResumePng{width:100%}.resume-export-actions #resumeStylePreview{white-space:normal;max-width:100%}}
