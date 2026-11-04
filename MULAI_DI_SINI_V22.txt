@@ -1,0 +1,83 @@
+RPM AREA V22 — MIGRASI FIREBASE -> SUPABASE (HTML/CSS/JS)
+===================================================
+STATUS: PROJECT URL + PUBLISHABLE KEY SUDAH DIPASANG di supabase-config.js.
+Database dan anggota telah disiapkan pengguna menurut screenshot.
+Belum dideploy dan belum diuji melalui koneksi backend langsung.
+
+A. SELAMATKAN DATA SEBELUM MENGGANTI VERSI
+1. Di SETIAP HP yang pernah mengisi QTY, buka aplikasi lama pada URL
+   yang saat ini dipakai. Backup JSON dari menu Data & Cadangan.
+2. Bila layar utama tidak aman, buka recovery.html versi lama dan unduh
+   "Data tersimpan di HP ini" dan cadangan IndexedDB bila ada.
+3. Simpan salinan JSON di luar HP (mis. komputer/drive pribadi).
+4. Cek perbedaan minggu, toko, PLU, QTY antarcadangan. Pilih cadangan
+   paling lengkap / sumber yang sudah direkonsiliasi sebagai sumber awal.
+5. Data Firestore TIDAK ikut berpindah hanya karena mengganti provider.
+   Jika Firebase 429 masih aktif, gunakan cadangan lokal dahulu; arsip
+   halaman pemulihan Firebase tetap tersedia sebagai recovery-firebase.html
+   untuk pembacaan ulang ketika kuota pulih.
+6. JANGAN hapus data situs, uninstall PWA, atau membersihkan cache/storage
+   hingga backup & data di minimal 2 HP terkonfirmasi.
+
+B. BUAT PROYEK SUPABASE (admin)
+1. Buka https://supabase.com/dashboard lalu buat proyek.
+2. Supabase > SQL Editor > New query: salin semua isi
+   "supabase-schema.sql" lalu RUN. Tabel rpm_members & rpm_records
+   serta RPC rpm_commit akan dibuat.
+3. Supabase > Authentication > Users > Add User: buat akun email/password
+   untuk pemakai yang berbeda. Akun Firebase tidak otomatis ikut pindah.
+4. Salin UID (UUID) user dari Authentication. Jalankan SQL berikut dengan
+   UID yang benar (ulangi untuk setiap pengguna berbeda):
+
+   insert into public.rpm_members (workspace_id,user_id,role)
+   values ('rpm-area-12', 'PASTE-UUID-USER-DI-SINI'::uuid, 'editor')
+   on conflict (workspace_id,user_id) do update set role=excluded.role;
+
+5. Buka Project Settings > API Keys (atau Connect) dan salin:
+   - Project URL: https://xxxxxxxx.supabase.co
+   - PUBLISHABLE key (sb_publishable_...) ATAU anon/public key
+   JANGAN memakai secret / service_role / database password di HTML.
+6. Isi file supabase-config.js:
+   url: 'https://xxxxxxxx.supabase.co',
+   key: 'sb_publishable_...',
+   workspaceId: 'rpm-area-12'
+7. Verifikasi Email/Password auth provider aktif dan akses data tabel
+   dari pengguna yang sudah jadi member workspace.
+
+C. DEPLOY TANPA KEHILANGAN DATA HP
+1. Setelah backup semua perangkat, tutup/tab aplikasi versi lama di
+   semua HP agar tidak ada penulisan selama cutover.
+2. Upload isi folder RpmArea-main ini ke repository/hosting yang SAMA
+   dan PATH/URL yang SAMA dengan aplikasi lama (jangan pindah domain).
+3. Tunggu deploy selesai, reload sekali dengan internet agar PWA v22
+   aktif. Jika aplikasi memakai URL/domain berbeda, localStorage lama
+   tidak ikut; restore JSON secara manual pada URL baru.
+4. Login Supabase pada 1 HP yang data lokalnya paling lengkap.
+   Jika data lokal saat ini tidak lengkap, RESTORE JSON yang dipilih
+   terlebih dahulu. Jangan ungah data yang belum dibandingkan.
+5. Jika Supabase benar-benar kosong, klik "Unggah data lokal ke area"
+   dan tunggu semua dokumen diverifikasi. Jangan tutup di tengah.
+6. Login di HP ke-2. Ambil data Cloud, periksa jumlah toko/PLU/QTY.
+   Tes ubah 1 QTY kemudian tunggu pembaruan di HP lain (cek setiap
+   ±90 detik; gunakan Cek Cloud Sekarang jika perlu).
+7. Simpan backup awal, tes ulang pengaturan bersama dan multiuser.
+
+D. CATATAN TEKNIS DAN KEAMANAN
+- app.js, style.css, model, rumus, ekspor & tampilan tetap dipertahankan.
+- Sinkronisasi tetap berbasis delta polling 90 detik, BUKAN push instan.
+- Semua update lewat RPC dengan expected_version. Jika data berubah di
+  HP lain, transaksi dibatalkan dan sinkronisasi meminta pemeriksaan.
+- SQL RLS hanya memberi hak baca kepada anggota. Hak menulis lewat
+  RPC untuk role 'editor' saja. Tanpa DELETE otomatis.
+- Halaman recovery.html baru hanya membaca data lokal/Supabase.
+  recovery-firebase.html hanya membaca Firestore lama (opsional).
+- Secret/service_role key tidak boleh pernah dikirim atau ditaruh di
+  HTML/JavaScript publik. Supabase juga memiliki batas paket gratis.
+- Perangkat yang offline tetap menyimpan ke localStorage; sinkronisasi
+  kembali ketika online dan tanpa konflik data.
+- Project URL dan publishable key telah diisi. Validasi login, akses,
+  dan sinkronisasi nyata belum dilakukan; uji setelah deploy ke hosting.
+
+PENTING: Proses ini tidak melakukan impor otomatis dari Firestore ke
+Supabase. Cadangan JSON harus diperiksa terlebih dahulu agar data dari
+beberapa HP tidak hilang atau tertimpa.

@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c38"><meta name="description" content="Monitoring POINT QTY 50% + Net Sales 50% untuk 12 toko dalam satu area, dengan input 7 hari dan sinkronisasi opsional.">
 <title>RpmArea · Weekly Performance</title>
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" href="./icon-192.png"><link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./style.css?v=19">
+<link rel="stylesheet" href="./style.css?v=23">
 </head>
 <body data-theme="neon">
 <div id="app" class="app">
@@ -37,7 +37,17 @@
   <section id="view-dashboard" class="view active" aria-labelledby="dashboardHeading">
    <div class="hero" data-layout-key="hero">
     <div><div class="hero-kicker" id="heroKicker">◉ WEEKLY AREA SCORECARD</div><h2 id="dashboardHeading"><span id="heroTitleLine">Performa area,</span> <span id="heroHighlight">12 toko dalam satu layar.</span></h2><p id="heroDescription">Achievement QTY dan Net Sales masing-masing berbobot 50%. Status ditentukan dari total POINT dibandingkan Time Factor hari berjalan.</p></div>
-    <div class="tf-box"><small id="timeFactorLabel">TIME FACTOR</small><strong id="heroTF">—</strong><span id="heroDay">0 / 7 HARI</span></div>
+    <div class="tf-box" aria-label="Time Factor berdasarkan tanggal pilihan">
+      <small id="timeFactorLabel">TIME FACTOR</small>
+      <div class="tf-value"><strong id="heroTF">—</strong><span id="heroDay">0 / 7 HARI</span></div>
+      <div class="tf-date-picker" role="group" aria-label="Pilih tanggal pencapaian">
+        <button id="tfPrevDay" class="tf-arrow" type="button" aria-label="Hari sebelumnya" title="Hari sebelumnya">‹</button>
+        <span id="tfSelectedDate" class="tf-selected-date" aria-live="polite">—</span>
+        <button id="tfNextDay" class="tf-arrow" type="button" aria-label="Hari berikutnya" title="Hari berikutnya">›</button>
+      </div>
+      <button id="tfGoToday" class="tf-today" type="button">↺ Kembali ke hari ini</button>
+      <p class="tf-hint">Pencapaian kumulatif sampai tanggal dipilih.</p>
+    </div>
    </div>
    <div id="kpis" class="kpis" data-layout-key="kpis"></div>
    <section class="surface daily-report-panel" data-layout-key="dailyReport" aria-labelledby="dailyReportTitle">
@@ -164,7 +174,7 @@ Kode Toko: SC94
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./data-guard.js?v=20"></script>
 <script src="./safe-merge.js?v=20"></script>
-<script src="./app.js?v=20"></script>
+<script src="./app.js?v=23"></script>
 <script src="./supabase-rest.js?v=22"></script>
 <script type="module" src="./cloud.js?v=22"></script>
 </body></html>
