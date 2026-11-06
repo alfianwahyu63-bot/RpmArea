@@ -687,3 +687,20 @@ body{color:var(--ink)}
 .daily-report-controls [hidden]{display:none!important}
 .daily-clear-preview{font-size:11px;line-height:1.6;color:var(--muted);padding:9px 10px;margin:0;border-radius:11px;background:var(--canvas);border:1px solid var(--border);overflow-wrap:anywhere}
 @media(max-width:600px){.daily-clear-scopes label{font-size:11px;padding:10px 4px}}
+
+/* V32: explicit, preview-only selective deletion of cloud-only item rows. */
+.cloud-catalog{margin:16px 0;padding:17px;border:1px solid rgba(96,165,250,.27);border-radius:18px;background:rgba(22,52,78,.26)}
+.cloud-catalog h4{margin:0 0 8px;font-size:17px;color:#a5dcff}
+.cloud-catalog p{margin:10px 0 13px;line-height:1.55;font-size:13px}
+.cloud-catalog-info{padding:10px 12px;border-radius:12px;background:rgba(22,36,53,.9);color:#dbeafe;overflow-wrap:anywhere}
+.cloud-catalog-info[data-state="error"]{color:#fecaca;border:1px solid #a53f3f}
+.cloud-catalog-info[data-state="success"]{color:#c4f9c7;border:1px solid #31754c}
+.cloud-catalog-list{margin:9px 0;max-height:250px;overflow-y:auto;border:1px solid rgba(143,170,199,.25);border-radius:12px}
+.cloud-catalog-row{display:flex;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid rgba(143,170,199,.15);color:#edf4ff;font-size:13px}
+.cloud-catalog-row:last-child{border-bottom:0}
+.cloud-catalog-row input,.cloud-catalog-checkall input{width:19px;height:19px;flex:none;accent-color:#80ed8e}
+.cloud-catalog-row span{line-height:1.48;overflow-wrap:anywhere}
+.cloud-catalog-checkall{display:flex;align-items:center;gap:9px;margin:13px 0;font-weight:700;font-size:13px}
+.cloud-catalog-tip{color:#f9d7ab!important}
+.cloud-catalog .inline-actions{margin:10px 0;display:flex;flex-wrap:wrap;gap:8px}
+.cloud-catalog .btn:disabled{opacity:.5;cursor:not-allowed}

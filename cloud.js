@@ -1,4 +1,4 @@
-/* RpmArea V31 · sinkronisasi lintas HP via Supabase PostgreSQL & RLS.
+/* RpmArea V32 · sinkronisasi lintas HP via Supabase PostgreSQL & RLS.
    Transaksi atomic compare-and-swap mencegah overwrite perubahan perangkat lain.
    Setiap perubahan menggunakan expected_version dan diverifikasi dengan membaca server.
    Bila request timeout, hasil TIDAK dianggap gagal atau berhasil: cek server kembali, tanpa retry tulis otomatis.
@@ -8,6 +8,7 @@ const $id=id=>document.getElementById(id);
 const cfg=window.RPM_AREA_SUPABASE||{};
 const transport=window.RpmCloudREST;
 const safeMerge=window.RpmSafeMerge;
+const catalogAPI=window.RpmCatalogDelete;
 const el={
  dialog:$('#cloudDialog'),open:$('#cloudOpen'),status:$('#cloudStatus'),badge:$('#cloudBadge'),
  form:$('#cloudLogin'),loginBtn:$('#cloudLoginBtn'),email:$('#cloudEmail'),password:$('#cloudPassword'),
@@ -18,7 +19,11 @@ const el={
  backupLocal:$('#cloudExportLocal'),backupCloud:$('#cloudExportRemote'),resync:$('#cloudResyncNow'),
  resyncStatus:$('#cloudResyncStatus'),restore:$('#cloudRestoreQty'),resume:$('#cloudResumeSafe'),
  repairNote:$('#cloudRepairMessage'),diag:$('#cloudDiagnosticBtn'),diagResult:$('#cloudDiagnosticResult'),
- sharedStatus:$('#sharedUIStatus'),cloudUIStatus:$('#cloudUIStatus'),checkNow:$('#cloudCheckNow')
+ sharedStatus:$('#sharedUIStatus'),cloudUIStatus:$('#cloudUIStatus'),checkNow:$('#cloudCheckNow'),
+ catalogScan:$('#cloudCatalogScan'),catalogInfo:$('#cloudCatalogInfo'),
+ catalogWrap:$('#cloudCatalogCandidates'),catalogList:$('#cloudCatalogList'),
+ catalogAll:$('#cloudCatalogAll'),catalogDelete:$('#cloudCatalogDelete'),
+ catalogBackupLocal:$('#cloudCatalogBackupLocal'),catalogBackupCloud:$('#cloudCatalogBackupCloud')
 };
 function status(msg,level='warn',badge=''){
  el.status.textContent=msg;el.status.dataset.level=level;
@@ -82,7 +87,7 @@ try{
   return records;
  }
  const modelMap=()=>pack(window.AreaApp.getData());
- const valueMap=records=>new Map([...records].filter(([id])=>id!=='area_config').map(([id,r])=>[id,r.value]));
+ const valueMap=records=>new Map([...records].filter(([id])=>id!=='area_config'&&id!=='catalog_sync').map(([id,r])=>[id,r.value]));
  function compare(local,server){
   const missing=[...local.keys()].filter(id=>!server.has(id));
   const extra=[...server.keys()].filter(id=>!local.has(id));
@@ -90,8 +95,8 @@ try{
   return{missing,extra,changed,any:!!(missing.length||extra.length||changed.length)};
  }
  function snapshotDownload(filename,model){const blob=new Blob([JSON.stringify(model,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000)}
- function cloudBackup(){const out={version:1,month:window.AreaApp.getState()?.month,week:window.AreaApp.getState()?.week,theme:window.AreaApp.getState()?.theme,settings:window.AreaApp.getState()?.settings,weeks:{},exportedAt:new Date().toISOString()};
-  for(const v of valueMap(serverDocs).values()){
+ function cloudBackup(documents=serverDocs){const out={version:1,month:window.AreaApp.getState()?.month,week:window.AreaApp.getState()?.week,theme:window.AreaApp.getState()?.theme,settings:window.AreaApp.getState()?.settings,weeks:{},exportedAt:new Date().toISOString()};
+  for(const v of valueMap(documents).values()){
    if(!v.week||!v.code)continue;
    const st=(out.weeks[v.week]??={stores:{}}).stores[v.code]??={code:v.code,name:v.code,targetQty:0,targetNS:0,brandTargets:{},reportedDays:{},clearedDays:{},items:[]};
    if(v.type==='store')Object.assign(st,{name:v.name||v.code,targetQty:v.targetQty||0,targetNS:v.targetNS||0,brandTargets:v.brandTargets||{},reportedDays:v.reportedDays||{},clearedDays:v.clearedDays||{}});
@@ -102,6 +107,7 @@ try{
  let serverDocs=new Map(),serverValues=new Map(),connected=false,active=false,blocked=false,writing=false,reconciling=false,loading=false,uncertain=false;
  let version=0,debounce=null,uiDebounce=null,pollTimer=null,uiWriting=false,blockReason='',lastResult='',lastUIRevision='';
  let quotaPaused=false,lastDeltaAt=0;
+ let catalogPreview=null,catalogBusy=false,catalogBackupLocal=false,catalogBackupCloud=false;
  const POLL_MS=90000,OVERLAP_MS=150000; // Query updated_at delta setiap 90 detik.
  const CONFIRMED_KEY='rpmarea_confirmed_supabase_v22';
  function rememberConfirmed(){try{localStorage.setItem(CONFIRMED_KEY,JSON.stringify([...serverValues]))}catch(err){console.warn('Tidak dapat menyimpan penanda cloud; backup HP tetap terpisah.',err)}}
@@ -150,7 +156,11 @@ try{
   try{
    // Poll reads only changed docs; manual check can still perform a full audit on demand.
    const delta=reason==='poll'?await rest.changesSince(new Date(Math.max(0,lastDeltaAt-OVERLAP_MS)).toISOString()):null;
-   const latest=reason==='poll'?new Map([...serverDocs,...delta]):await rest.listRecords();if(tokenVersion!==version)return;
+   // Hard-deleted PLUs cannot appear in a modified-at delta. The SQL delete RPC
+   // atomically updates catalog_sync, so fetch a full snapshot when it changes.
+   const catalogChanged=reason==='poll'&&delta.has('catalog_sync')&&
+    serverDocs.get('catalog_sync')?.updateTime!==delta.get('catalog_sync')?.updateTime;
+   const latest=reason==='poll'?(catalogChanged?await rest.listRecords():new Map([...serverDocs,...delta])):await rest.listRecords();if(tokenVersion!==version)return;
    lastDeltaAt=startedAt;quotaPaused=false;
    if(reason==='poll'&&!delta.size)return; // No changes means zero large collection scans.
    await loadSharedUi(latest);
@@ -230,7 +240,132 @@ try{
   finally{uiWriting=false; if(window.AreaApp.getPendingSharedUI()&&window.AreaApp.getPendingSharedUI().revision!==pending.revision)scheduleUI()}
  }
  function scheduleUI(){clearTimeout(uiDebounce);if(connected&&!quotaPaused)uiDebounce=setTimeout(publishUI,1200)}
- function clearConnection(){++version;connected=false;active=false;blocked=false;uncertain=false;loading=false;writing=false;reconciling=false;quotaPaused=false;lastDeltaAt=0;clearTimeout(debounce);clearTimeout(uiDebounce);clearInterval(pollTimer);serverDocs=new Map();serverValues=new Map();progress();el.conflict.hidden=true;el.upload.hidden=true;el.logged.hidden=true;el.form.hidden=false}
+ function catalogNote(message,level='pending'){
+  if(el.catalogInfo){el.catalogInfo.textContent=message;el.catalogInfo.dataset.state=level}
+ }
+ function catalogSelected(){
+  return catalogPreview?[...el.catalogList.querySelectorAll('input[type="checkbox"]:checked')]
+   .map(input=>input.value).filter(id=>catalogPreview.items.some(x=>x.id===id)):[];
+ }
+ function catalogButtons(){
+  const selected=catalogSelected().length;
+  for(const button of [el.catalogScan,el.catalogBackupLocal,el.catalogBackupCloud])
+   if(button)button.disabled=catalogBusy||reconciling||writing;
+  if(el.catalogDelete)el.catalogDelete.disabled=catalogBusy||reconciling||writing||
+   !selected||!catalogBackupLocal||!catalogBackupCloud;
+  if(el.catalogAll&&catalogPreview){
+   el.catalogAll.checked=selected===catalogPreview.items.length;
+   el.catalogAll.indeterminate=selected>0&&selected<catalogPreview.items.length;
+  }
+ }
+ function clearCatalog(){
+  catalogPreview=null;catalogBackupLocal=false;catalogBackupCloud=false;
+  if(el.catalogWrap)el.catalogWrap.hidden=true;
+  if(el.catalogList)el.catalogList.replaceChildren();
+  catalogButtons();
+ }
+ async function scanCatalog(){
+  if(!connected||!auth.currentUser){catalogNote('Login Supabase terlebih dahulu.','error');return}
+  if(writing||reconciling||loading||catalogBusy){catalogNote('Proses sinkronisasi lain sedang berjalan. Ulangi setelah selesai.','error');return}
+  if(!catalogAPI?.candidates){catalogNote('Modul PLU V32 belum termuat. Refresh aplikasi.','error');return}
+  clearCatalog();catalogBusy=true;catalogButtons();catalogNote('⏳ Membaca ulang semua PLU dari Supabase tanpa mengubah data…');
+  try{
+   const latest=await rest.listRecords(),local=modelMap();
+   const plan=catalogAPI.candidates(local,valueMap(latest));
+   if(!plan.items.length){
+    catalogNote('Tidak ditemukan PLU yang hanya ada di Cloud dan aman untuk ditinjau. '+
+      (plan.skipped.length?plan.skipped.length+' dokumen lain perlu pemeriksaan manual.':'Daftar PLU HP dan Cloud sesuai.'),'success');return;
+   }
+   catalogPreview={remote:latest,local,items:plan.items};
+   const f=document.createDocumentFragment();
+   for(const item of plan.items){
+    const label=document.createElement('label');label.className='cloud-catalog-row';
+    const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.value=item.id;checkbox.checked=true;
+    const span=document.createElement('span');
+    span.textContent=`${item.code} · PLU ${item.plu} — ${item.description||'(tanpa deskripsi)'} · minggu ${item.week} · ${item.qty} QTY historis`;
+    label.append(checkbox,span);f.append(label);
+   }
+   el.catalogList.replaceChildren(f);el.catalogWrap.hidden=false;
+   catalogNote(`${plan.items.length} PLU hanya ada di Cloud. Pilih yang benar-benar telah dihapus dari HP. `+
+     `Dokumen lainnya tidak disentuh.${plan.skipped.length?' '+plan.skipped.length+' dokumen tidak memenuhi syarat dan tidak dapat dipilih.':''}`);
+  }catch(err){clearCatalog();catalogNote('Gagal memeriksa Cloud: '+failText(err),'error')}
+  finally{catalogBusy=false;catalogButtons()}
+ }
+ async function deleteSelectedCatalog(){
+  if(!connected||!catalogPreview||writing||reconciling||loading||catalogBusy)return;
+  const ids=catalogSelected();
+  if(!ids.length||!catalogBackupLocal||!catalogBackupCloud){catalogNote('Pilih PLU dan unduh kedua backup terlebih dahulu.','error');return}
+  const selected=catalogPreview.items.filter(x=>ids.includes(x.id));
+  const qty=selected.reduce((total,x)=>total+x.qty,0);
+  const approval=prompt(`PERINGATAN: ${selected.length} PLU dan ${qty} QTY historisnya akan DIHAPUS PERMANEN dari Cloud.\n`+
+   `Data HP tidak ditimpa. Semua perangkat lain harus diperbarui ke V32.\n\n`+
+   `Ketik persis: HAPUS ${selected.length} PLU`);
+  if(approval!==`HAPUS ${selected.length} PLU`){catalogNote('Dibatalkan. Belum ada PLU dihapus.','pending');return}
+  if(!confirm('Konfirmasi terakhir: hapus '+selected.length+' PLU yang DIPILIH di Cloud, bukan PLU lainnya?'))return;
+  catalogBusy=true;reconciling=true;disableActions(true);catalogButtons();clearTimeout(debounce);
+  let deleted=0;
+  try{
+   const currentLocal=modelMap();
+   if(compare(currentLocal,catalogPreview.local).any)throw Error('Data HP berubah sejak pratinjau. Ulangi Periksa PLU.');
+   const latest=await rest.listRecords();
+   if(compare(valueMap(latest),valueMap(catalogPreview.remote)).any)
+    throw Error('Isi Cloud berubah sejak pratinjau. Jangan menghapus memakai data lama; periksa kembali.');
+   for(const row of selected){
+    if(currentLocal.has(row.id))throw Error('PLU '+row.plu+' sudah ada kembali di HP. Penghapusan ditolak.');
+    if(!latest.has(row.id)||latest.get(row.id).updateTime!==catalogPreview.remote.get(row.id)?.updateTime)
+     throw Error('Versi PLU '+row.plu+' berubah di Cloud. Ulangi pratinjau.');
+   }
+   // Extra safety copy in IndexedDB; portable JSON downloads were already
+   // explicitly requested using the two backup buttons.
+   if(window.AreaSafety&&!(await window.AreaSafety.beforeRemote()))
+    throw Error('Backup keamanan lokal gagal. Penghapusan dibatalkan.');
+   for(let i=0;i<selected.length;i+=25){
+    const chunk=selected.slice(i,i+25);
+    const result=await rest.deleteCatalogItems(chunk.map(row=>({id:row.id,previous:latest.get(row.id)})),{timeout:30000});
+    if(Number(result?.deleted)!==chunk.length)throw Error('Server tidak mengonfirmasi jumlah PLU yang dihapus.');
+    deleted+=chunk.length;
+    catalogNote(`⏳ ${deleted} dari ${selected.length} PLU dihapus. Memverifikasi hasil Cloud…`);
+   }
+   const check=await rest.listRecords();
+   const remaining=selected.filter(row=>check.has(row.id));
+   if(remaining.length)throw Error('Masih ada '+remaining.length+' PLU pilihan di Cloud. Penghapusan belum terverifikasi.');
+   serverDocs=check;serverValues=valueMap(check);lastDeltaAt=Date.now();
+   const difference=compare(modelMap(),serverValues);
+   clearCatalog();
+   if(difference.any){displayConflict(modelMap(),serverValues,'PLU terpilih sudah dihapus; masih ada perbedaan lain');
+    catalogNote(`✅ ${deleted} PLU pilihan sudah tidak ada di Cloud. Masih ada ${difference.missing.length+difference.extra.length+difference.changed.length} perbedaan lain. Periksa dahulu sebelum sinkronisasi ulang.`,'success');
+   }else{
+    setActive(`✅ ${deleted} PLU dihapus dari Cloud; semua data lainnya cocok dengan HP.`);
+    catalogNote(`✅ ${deleted} PLU pilihan sudah dihapus di Cloud. Daftar Cloud sekarang mengikuti daftar lokal.`, 'success');
+   }
+  }catch(err){
+   active=false;blocked=true;
+   onError(err,'Penghapusan PLU belum selesai');
+   catalogNote(`❌ ${deleted} PLU batch sebelumnya sempat dikonfirmasi. ${failText(err)}. Klik Periksa PLU lagi sebelum mencoba apa pun.`, 'error');
+   clearCatalog();
+  }finally{catalogBusy=false;reconciling=false;disableActions(false);catalogButtons()}
+ }
+ // UI for selective, opt-in deletions, never executed by normal sync.
+ el.catalogScan?.addEventListener('click',scanCatalog);
+ el.catalogList?.addEventListener('change',catalogButtons);
+ el.catalogAll?.addEventListener('change',()=>{
+  el.catalogList.querySelectorAll('input[type="checkbox"]').forEach(input=>input.checked=el.catalogAll.checked);
+  catalogButtons();
+ });
+ el.catalogBackupLocal?.addEventListener('click',()=>{
+  if(!catalogPreview||catalogBusy)return;
+  try{window.AreaApp.downloadLocal();catalogBackupLocal=true;catalogNote('Backup Lokal diminta. Pastikan file JSON tersimpan; lanjut unduh Backup Cloud.');catalogButtons()}
+  catch(err){catalogNote('Backup lokal gagal: '+String(err.message||err),'error')}
+ });
+ el.catalogBackupCloud?.addEventListener('click',()=>{
+  if(!catalogPreview||catalogBusy)return;
+  try{
+   snapshotDownload('Backup_RpmArea_Cloud_SEBELUM_HAPUS_PLU_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json',cloudBackup(catalogPreview.remote));
+   catalogBackupCloud=true;catalogNote('Backup Cloud diminta. Pastikan kedua file JSON tersimpan sebelum menghapus.');catalogButtons();
+  }catch(err){catalogNote('Backup cloud gagal: '+String(err.message||err),'error')}
+ });
+ el.catalogDelete?.addEventListener('click',deleteSelectedCatalog);
+ function clearConnection(){++version;clearCatalog();connected=false;active=false;blocked=false;uncertain=false;loading=false;writing=false;reconciling=false;quotaPaused=false;lastDeltaAt=0;clearTimeout(debounce);clearTimeout(uiDebounce);clearInterval(pollTimer);serverDocs=new Map();serverValues=new Map();progress();el.conflict.hidden=true;el.upload.hidden=true;el.logged.hidden=true;el.form.hidden=false}
  async function start(user){clearConnection();const current=version;lastDeltaAt=Date.now();
   el.logged.hidden=false;el.form.hidden=true;el.user.textContent='👤 '+(user.email||'Pengguna')+' · Area: '+cfg.workspaceId;
   status('🔐 Login berhasil. Memeriksa izin Supabase via HTTPS…','warn','Cloud: Periksa');

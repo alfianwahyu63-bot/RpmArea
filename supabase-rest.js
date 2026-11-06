@@ -1,4 +1,4 @@
-/* RpmArea V22 — Supabase PostgREST transport.
+/* RpmArea V32 — Supabase PostgREST transport.
    Access controlled by RLS, all writes via atomic compare-and-swap RPC rpm_commit.
    No deletes and no blind overwrite of existing records. */
 (function(root){'use strict';
@@ -86,7 +86,22 @@ function makeClient({supabase,workspaceId}){
     p_workspace_id:workspaceId,p_changes:payload
   }),{timeout,writing:true});
  }
- return {getMember,getRecord,getRecords,listRecords,changesSince,commit};
+ async function deleteCatalogItems(items,{timeout=30000}={}){
+  if(!Array.isArray(items)||!items.length||items.length>75)
+   throw new CloudError('Pilih 1–75 PLU per batch','INVALID_DELETE_BATCH');
+  const payload=items.map(item=>{
+   const v=item?.previous?.updateTime;
+   if(typeof item?.id!=='string'||!item.id.startsWith('it_')||
+      !Number.isSafeInteger(Number(v))||Number(v)<1)
+    throw new CloudError('ID/versi PLU tidak valid: '+String(item?.id),'INVALID_DELETE_DATA');
+   return {id:item.id,expected_version:Number(v)};
+  });
+  // Only the dedicated editor-checked RPC can delete, with a CAS precondition.
+  return checked(supabase.rpc('rpm_delete_catalog_items',{
+   p_workspace_id:workspaceId,p_items:payload
+  }),{timeout,writing:true});
+ }
+ return {getMember,getRecord,getRecords,listRecords,changesSince,commit,deleteCatalogItems};
 }
 const api={makeClient,CloudError,canonical,same};
 root.RpmCloudREST=api;
