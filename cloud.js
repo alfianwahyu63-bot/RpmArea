@@ -1,4 +1,4 @@
-/* RpmArea V22 · sinkronisasi lintas HP via Supabase PostgreSQL & RLS.
+/* RpmArea V31 · sinkronisasi lintas HP via Supabase PostgreSQL & RLS.
    Transaksi atomic compare-and-swap mencegah overwrite perubahan perangkat lain.
    Setiap perubahan menggunakan expected_version dan diverifikasi dengan membaca server.
    Bila request timeout, hasil TIDAK dianggap gagal atau berhasil: cek server kembali, tanpa retry tulis otomatis.
@@ -121,7 +121,9 @@ try{
   blocked=true;active=false;blockReason=why;
   const d=compare(local,server);
   el.conflict.hidden=false;
-  el.conflictText.textContent=`${why}. Lokal: ${local.size} dokumen, Cloud: ${server.size}. Hanya HP: ${d.missing.length}, hanya Cloud: ${d.extra.length}, isi berbeda: ${d.changed.length}. Data belum ditimpa. Backup kedua versi sebelum sinkronisasi.`;
+  const describe=(ids,from)=>ids.slice(0,3).map(id=>{const doc=from.get(id);return doc?.type==='item'?`PLU ${doc.plu} · toko ${doc.code}`:doc?.type==='store'?`toko ${doc.code} · minggu ${doc.week}`:id}).join('; ');
+  const example=d.extra.length?' Dokumen hanya Cloud: '+describe(d.extra,server)+'.':d.missing.length?' Dokumen hanya HP: '+describe(d.missing,local)+'.':'';
+  el.conflictText.textContent=`${why}. Lokal: ${local.size} dokumen, Cloud: ${server.size}. Hanya HP: ${d.missing.length}, hanya Cloud: ${d.extra.length}, isi berbeda: ${d.changed.length}.${example} Data belum ditimpa atau dihapus. Gunakan Sinkronisasi Ulang Aman setelah backup.`;
   status('🛑 Lokal dan Cloud belum sama. Sinkronisasi dihentikan untuk menjaga data. Gunakan tombol Sinkronisasi Ulang Aman.','error','Cloud: Konflik');
   el.restore.hidden=true;el.resume.hidden=true;
   note('Pilih Sinkronisasi Ulang Aman untuk membandingkan data terbaru. Tidak ada penimpaan otomatis.','warning');
@@ -271,26 +273,45 @@ try{
    if(!compare(local,live).any){setActive('✅ Cloud dan HP sudah identik. Sinkronisasi kembali aktif.');note('✅ Tidak ada dokumen berbeda.','success');return}
    const plan=safeMerge?.build(local,live);
    if(!plan?.ok){displayConflict(local,live,'Konflik belum bisa digabung otomatis');note('⛔ '+(plan?.reason||'Modul safe merge tidak tersedia')+(plan?.issues?.length?' Contoh: '+plan.issues.slice(0,3).join(' | '):'')+' · Download kedua backup untuk pemeriksaan.','error');return}
-   if(!plan.writeCount){
-    if(window.AreaSafety&&!(await window.AreaSafety.beforeRemote()))throw Error('Gagal backup HP.');
-    await applyServer(latest);setActive();note('✅ Perbedaan yang aman dari Cloud dimuat ke HP.','success');return
+   const example=(arr)=>arr.slice(0,5).map(x=>`• Toko ${x.code} / PLU ${x.plu}${x.description?' — '+x.description:''}`).join('\n');
+   const catalogNote=plan.addCloud.length?`\n\n${plan.addCloud.length} PLU ADA DI CLOUD TAPI BELUM DI HP, akan DIPULIHKAN ke HP:\n${example(plan.addCloud)}`:'';
+   const pendingNote=plan.addLocal.length?`\n\n${plan.addLocal.length} PLU ADA DI HP TAPI BELUM DI CLOUD, akan ditambahkan ke Cloud:\n${example(plan.addLocal)}`:'';
+   note(`Perbandingan lengkap: ${plan.count} dokumen, ${plan.writeCount} perlu dikirim, ${plan.addCloud.length} PLU Cloud-only akan dipulihkan di HP, ${plan.addLocal.length} PLU HP-only akan dikirim. Tanda hapus harian diprioritaskan.`);
+   // Even when nothing must be written, adding a cloud-only catalog item changes
+   // the local PLU list: always ask first and preserve both independent backups.
+   const mustConfirm=!!(plan.writeCount||plan.needsApproval);
+   if(mustConfirm){
+    const message=`SINKRONISASI ULANG AMAN — V31\n\n`+
+      `${plan.count} dokumen berbeda; ${plan.writeCount} perlu ditulis ke Cloud.\n`+
+      `QTY tambahan dari HP: ${plan.localQty}; dari Cloud: ${plan.cloudQty}.\n`+
+      `QTY dari laporan yang ditandai HAPUS akan tetap 0.\n`+
+      `PLU dan daftar toko tidak dihapus oleh proses ini.`+catalogNote+pendingNote+
+      `\n\nBackup JSON LOKAL dan CLOUD akan diunduh sebelum perubahan. `+
+      `Pastikan perangkat lain tidak sedang input.\n\nLanjutkan?`;
+    if(!confirm(message)){note('Dibatalkan. Tidak ada data yang ditimpa atau dikirim.','warning');return}
    }
-   note(`Ditemukan ${plan.count} dokumen berbeda, ${plan.writeCount} perlu dikirim; QTY lokal ${plan.localQty}, QTY cloud ${plan.cloudQty}, status tanggal ${plan.daysMerged}.`);
-   const approved=confirm(`SINKRONISASI AMAN\n\n${plan.count} dokumen berbeda.\n${plan.writeCount} dokumen perlu disimpan di cloud.\nQTY lokal tambahan: ${plan.localQty}. QTY dari cloud: ${plan.cloudQty}.\n\nPERHATIAN: QTY 0 yang merupakan koreksi sengaja bisa berubah. Pastikan backup lokal dan cloud sudah diunduh dan tidak ada HP lain sedang input.\n\nLanjutkan?`);
-   if(!approved){note('Dibatalkan. Belum ada perubahan dikirim.');return}
    if(window.AreaSafety&&!(await window.AreaSafety.beforeRemote()))throw Error('Backup keamanan IndexedDB gagal.');
-   window.AreaApp.downloadLocal();snapshotDownload('Backup_RpmArea_Cloud_SEBELUM_MERGE_'+new Date().toISOString().slice(0,10)+'.json',cloudBackup());
-   const rows=plan.changes.filter(row=>row.write);let done=0;
-   progress(rows.length,0,'merge');
-   for(let i=0;i<rows.length;i+=25){const chunk=rows.slice(i,i+25);
-    await rest.commit(chunk.map(row=>({id:row.id,value:row.merged,previous:latest.get(row.id),uid:auth.currentUser.id})),{timeout:25000});
-    done+=chunk.length;progress(rows.length,Math.min(rows.length-1,done),'merge','Membaca ulang untuk memverifikasi dokumen…');
+   if(mustConfirm){
+    window.AreaApp.downloadLocal();
+    snapshotDownload('Backup_RpmArea_Cloud_SEBELUM_MERGE_'+new Date().toISOString().slice(0,10)+'.json',cloudBackup());
    }
-   const check=await rest.listRecords();const target=valueMap(check);
-   const expected=plan.expected;
-   if(compare(expected,target).any){displayConflict(local,target,'Setelah penggabungan, masih ada dokumen berbeda');return}
-   await applyServer(check);progress(rows.length,rows.length,'merge');setActive('✅ Penggabungan berhasil: '+rows.length+' dokumen dikonfirmasi di Supabase.');
-   note('✅ Cloud sudah sesuai data gabungan. Pengaturan, PLU, HPP, dan penjualan lain tetap terlindungi.','success');
+   const rows=plan.changes.filter(row=>row.write);
+   if(rows.length){
+    let done=0;progress(rows.length,0,'merge');
+    for(let i=0;i<rows.length;i+=25){const chunk=rows.slice(i,i+25);
+     await rest.commit(chunk.map(row=>({id:row.id,value:row.merged,previous:latest.get(row.id),uid:auth.currentUser.id})),{timeout:25000});
+     done+=chunk.length;progress(rows.length,Math.min(rows.length-1,done),'merge','Membaca ulang untuk memverifikasi dokumen…');
+    }
+   }
+   // A fresh full read also protects against another device inserting new PLUs
+   // or changing a different day while the merge was in flight.
+   const check=rows.length?await rest.listRecords():latest;
+   const target=valueMap(check);
+   if(compare(plan.expected,target).any){displayConflict(local,target,'Verifikasi server berubah selama sinkronisasi');note('Cloud berubah selama proses. Belum diterapkan ke HP. Periksa kembali.','error');return}
+   await applyServer(check);
+   if(rows.length)progress(rows.length,rows.length,'merge');
+   setActive('✅ Data tersinkron: '+plan.addCloud.length+' PLU dipulihkan ke HP, '+rows.length+' dokumen Cloud diverifikasi.');
+   note('✅ Status Cloud Aktif. Penghapusan per tanggal dipertahankan; PLU, HPP, target dan tanggal lain terlindungi.','success');
   }catch(err){uncertain=err?.code==='TIMEOUT_UNKNOWN';active=false;blocked=true;el.conflict.hidden=false;onError(err,'Sinkronisasi ulang tidak selesai');note(failText(err)+(uncertain?' Cek Cloud dulu sebelum ulang.':''),'error')}
   finally{reconciling=false;disableActions(false)}
  }

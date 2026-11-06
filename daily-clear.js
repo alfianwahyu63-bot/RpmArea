@@ -1,4 +1,4 @@
-/* RpmArea V30 — reset sales reports for one store OR the whole area on one date.
+/* RpmArea V31 — reset sales reports for one store OR the whole area on one date.
    The store/item catalog, prices, targets, and every other date are untouched. */
 (function(root){'use strict';
  const DAY_MS=86400000;
