@@ -22,6 +22,12 @@
       const r=cloud.get(id);
       if(equal(l,r))continue;
       const context=`${l?.code||'?'} / ${l?.plu||'toko'}`;
+      // Cleared-day markers are deliberate removals, NOT empty unsaved values.
+      // Never let the usual 0-vs-positive safe merge restore a deleted daily report.
+      const storeId='st_'+encodeURIComponent(String(l?.week||''))+'_'+encodeURIComponent(String(l?.code||''));
+      const localClear=local.get(storeId)?.clearedDays||{};
+      const cloudClear=cloud.get(storeId)?.clearedDays||{};
+      const dayDate=index=>{const dt=new Date(String(l.week)+'T12:00:00Z');dt.setUTCDate(dt.getUTCDate()+index);return dt.toISOString().slice(0,10)};
       if(l?.type!==r?.type){issues.push(`${context}: jenis dokumen berbeda`);continue}
       if(l.type==='item'){
         if(!equal(noKey(l,'days'),noKey(r,'days'))){issues.push(`${context}: PLU, brand, deskripsi atau HPP berbeda`);continue}
@@ -32,19 +38,30 @@
           const a=l.days[d],b=r.days[d];
           if(typeof a!=='number'||typeof b!=='number'||!Number.isFinite(a)||!Number.isFinite(b)||a<0||b<0){issues.push(`${context}: QTY tanggal ${d+1} tidak valid`);safe=false;break}
           if(a===b){days.push(a);continue}
+          const date=dayDate(d);
+          if(localClear[date]||cloudClear[date]){
+            issues.push(`${context}: tanggal ${date} pernah dihapus. Perbedaan QTY tidak boleh dipulihkan otomatis; sinkron ulang dan periksa backup.`);safe=false;break;
+          }
           if(a>0&&b===0){days.push(a);localQty+=a;continue}
           if(b>0&&a===0){days.push(b);cloudQty+=b;continue}
           issues.push(`${context}: QTY tanggal ${d+1} HP ${a} ≠ cloud ${b} (keduanya terisi)`);safe=false;break;
         }
         if(safe)changes.push({id,kind:'item',local:l,server:r,merged:{...r,days},write:!equal({...r,days},r)});
       }else if(l.type==='store'){
-        if(!equal(noKey(l,'reportedDays'),noKey(r,'reportedDays'))){issues.push(`${context}: target atau data toko berbeda`);continue}
+        if(!equal(noKey(l,'reportedDays'),noKey(r,'reportedDays'))){issues.push(`${context}: target, data toko, atau penanda penghapusan harian berbeda. Perlu sinkronisasi ulang.`);continue}
         const a=l.reportedDays||{},b=r.reportedDays||{};
         if(Array.isArray(a)||Array.isArray(b)||typeof a!=='object'||typeof b!=='object'){
           issues.push(`${context}: format status laporan tidak sesuai`);continue;
         }
         let valid=true;
         const merged={...b};
+        // If one copy still reports a deliberately cleared day, do not revive its marker.
+        for(const day of new Set([...Object.keys(a),...Object.keys(b)])){
+          if((l.clearedDays?.[day]||r.clearedDays?.[day])&&!equal(a[day],b[day])){
+            issues.push(`${context}: status laporan ${day} berbenturan dengan penghapusan harian`);valid=false;
+          }
+        }
+        if(!valid)continue;
         for(const [day,value] of Object.entries(a)){
           if(!value||typeof value!=='object'||Array.isArray(value)){issues.push(`${context}: status laporan ${day} tidak sesuai`);valid=false;break}
           if(!Object.hasOwn(merged,day)){merged[day]=value;daysMerged++}

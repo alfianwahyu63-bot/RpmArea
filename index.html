@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c38"><meta name="description" content="Monitoring POINT QTY 50% + Net Sales 50% untuk 12 toko dalam satu area, dengan input 7 hari dan sinkronisasi opsional.">
 <title>RpmArea · Weekly Performance</title>
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" href="./icon-192.png"><link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./style.css?v=27">
+<link rel="stylesheet" href="./style.css?v=30">
 <link rel="stylesheet" href="./insights.css?v=28">
 </head>
 <body data-theme="neon">
@@ -53,7 +53,18 @@
    </div>
    <div id="kpis" class="kpis" data-layout-key="kpis"></div>
    <section class="surface daily-report-panel" data-layout-key="dailyReport" aria-labelledby="dailyReportTitle">
-     <div class="daily-report-heading"><div><span class="daily-report-kicker">✦ MONITORING TOKO • 12 STORE</span><h3 id="dailyReportTitle">📋 Status Input Harian</h3><p id="dailyReportSubtitle">Toko yang sudah dan belum memasukkan penjualan pada tanggal terpilih.</p></div><label class="daily-date-field">Tanggal laporan <select id="dailyReportDate" aria-label="Pilih tanggal pemantauan"></select></label></div>
+     <div class="daily-report-heading"><div><span class="daily-report-kicker">✦ MONITORING TOKO • 12 STORE</span><h3 id="dailyReportTitle">📋 Status Input Harian</h3><p id="dailyReportSubtitle">Toko yang sudah dan belum memasukkan penjualan pada tanggal terpilih.</p></div>
+       <div class="daily-report-controls">
+        <label class="daily-date-field">Tanggal laporan <select id="dailyReportDate" aria-label="Pilih tanggal pemantauan"></select></label>
+        <fieldset class="daily-clear-fieldset"><legend>Cakupan penghapusan</legend><div class="daily-clear-scopes">
+         <label><input type="radio" name="clearDayScope" value="store" checked> 🏪 Per Store</label>
+         <label><input type="radio" name="clearDayScope" value="area"> 🏬 1 Area</label>
+        </div></fieldset>
+        <label class="daily-date-field" id="clearDayStoreField">Pilih toko <select id="clearDayStore" aria-label="Pilih toko yang laporannya akan dihapus"><option value="">-- Pilih toko --</option></select></label>
+        <p class="daily-clear-preview" id="clearDayPreview" aria-live="polite">Pilih toko untuk melihat ringkasan penghapusan.</p>
+        <button class="btn danger daily-clear-day" id="clearDayReportsBtn" type="button" disabled>🗑 Hapus laporan toko ini</button>
+        <small>Hanya QTY dan status laporan pada tanggal pilihan yang dihapus. PLU, list item, HPP, target dan tanggal lain tetap aman.</small>
+       </div></div>
      <div class="daily-report-stats"><div class="daily-count is-done"><span>✓ <span data-report-label="done">Sudah Input</span></span><b id="dailyDoneCount">0</b></div><div class="daily-count is-missing"><span>◷ <span data-report-label="missing">Belum Input</span></span><b id="dailyMissingCount">0</b></div><div class="daily-count is-total"><span>Total Toko</span><b id="dailyDoneTotal">0</b></div></div>
      <div class="daily-progress-line"><div class="daily-progress-title"><span>Progres input harian</span><strong id="dailyReportPct">0%</strong></div><div class="daily-progress-track" role="progressbar" aria-label="Persentase toko yang sudah input" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="dailyReportBar" class="daily-progress-bar"></div></div></div>
      <div class="daily-report-filters" role="group" aria-label="Filter status input toko"><button type="button" class="daily-filter selected" data-report-filter="all" aria-pressed="true">Semua Toko</button><button type="button" class="daily-filter" data-report-filter="missing" aria-pressed="false">Belum Input</button><button type="button" class="daily-filter" data-report-filter="done" aria-pressed="false">Sudah Input</button></div>
@@ -187,7 +198,7 @@ Kode Toko: SC94
 <dialog id="textDialog" class="modal"><div class="modal-head"><div><small>PERSONALISASI</small><h3>Judul & Keterangan</h3></div><button class="close" type="button" data-close="textDialog">×</button></div><form id="editTextForm"><label>Nama Aplikasi<input name="appName" maxlength="50"></label><label>Judul Utama<input name="title" maxlength="90"></label><label>Keterangan<textarea name="description" rows="3" maxlength="300"></textarea></label><label>Nama Area<input name="area" maxlength="50"></label><button class="btn primary block" type="submit">Simpan Teks</button></form></dialog>
 <dialog id="storeDialog" class="modal"><div class="modal-head"><div><small>MASTER TOKO</small><h3 id="storeDialogTitle">Tambah Toko</h3></div><button class="close" type="button" data-close="storeDialog">×</button></div><form id="storeForm"><input type="hidden" name="oldCode"><label>Kode Toko<input name="code" required maxlength="40" placeholder="Contoh: RPM01"></label><label>Nama Toko<input name="name" required maxlength="100" placeholder="Nama toko"></label><label>Target QTY (1 minggu)<input name="targetQty" required type="number" min="0" step="any"></label><label>Target NS (1 minggu)<input name="targetNS" required type="number" min="0" step="any"></label><button class="btn primary block" type="submit">Simpan Toko</button></form></dialog>
 <dialog id="pluDialog" class="modal"><div class="modal-head"><div><small>KATALOG MINGGUAN</small><h3>Tambah PLU</h3></div><button class="close" type="button" data-close="pluDialog">×</button></div><form id="pluForm"><label>PLU<input name="plu" maxlength="50" required placeholder="Kode PLU"></label><label>Brand (opsional)<input name="brand" maxlength="70"></label><label>Deskripsi Produk<input name="description" maxlength="180" required></label><label>HPP / Harga per unit<input name="hpp" type="number" min="0" step="any" value="0"></label><button class="btn primary block" type="submit">Tambahkan</button></form></dialog>
-<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>SUPABASE · MULTI PENGGUNA <span class="rpm-build-pill">V28 · SUPABASE</span></small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-quota-tip">🟢 V27 memakai Supabase: pemeriksaan data berubah setiap 90 detik saat online. Sinkronisasi akan aktif setelah konfigurasi Supabase, tabel SQL, dan akun anggota disiapkan. Jangan hapus data HP.</p><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Menyiapkan koneksi Supabase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Supabase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
+<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>SUPABASE · MULTI PENGGUNA <span class="rpm-build-pill">V30 · SUPABASE</span></small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-quota-tip">🟢 V27 memakai Supabase: pemeriksaan data berubah setiap 90 detik saat online. Sinkronisasi akan aktif setelah konfigurasi Supabase, tabel SQL, dan akun anggota disiapkan. Jangan hapus data HP.</p><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Menyiapkan koneksi Supabase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Supabase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
   <section class="cloud-progress" id="cloudProgress" hidden aria-label="Kemajuan penyimpanan cloud">
     <div class="cloud-progress-heading">
       <div><small>PROGRES SINKRONISASI</small><strong id="cloudProgressTitle">Menyiapkan data...</strong></div>
@@ -233,11 +244,12 @@ Kode Toko: SC94
 <script src="./supabase-config.js?v=22"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./data-guard.js?v=20"></script>
-<script src="./safe-merge.js?v=20"></script>
+<script src="./safe-merge.js?v=30"></script>
 <script src="./insights.js?v=28"></script>
-<script src="./app.js?v=28"></script>
+<script src="./daily-clear.js?v=30"></script>
+<script src="./app.js?v=30"></script>
 <script src="./supabase-rest.js?v=22"></script>
-<script type="module" src="./cloud.js?v=27"></script>
+<script type="module" src="./cloud.js?v=30"></script>
 <script src="./quota-trend.js?v=27"></script>
 <script type="module" src="./quota.js?v=27"></script>
 </body></html>

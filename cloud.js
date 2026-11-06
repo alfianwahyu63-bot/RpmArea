@@ -73,7 +73,8 @@ try{
   for(const [week,wk] of Object.entries(model.weeks||{}))for(const st of Object.values(wk.stores||{})){
    const base=idKey(week)+'_'+idKey(st.code);
    records.set('st_'+base,{type:'store',week,code:st.code,name:st.name,targetQty:Number(st.targetQty)||0,targetNS:Number(st.targetNS)||0,
-    brandTargets:st.brandTargets||{},...(st.reportedDays&&Object.keys(st.reportedDays).length?{reportedDays:st.reportedDays}:{})});
+    brandTargets:st.brandTargets||{},...(st.reportedDays&&Object.keys(st.reportedDays).length?{reportedDays:st.reportedDays}:{}),
+    ...(st.clearedDays&&Object.keys(st.clearedDays).length?{clearedDays:st.clearedDays}:{})});
    for(const item of st.items||[]){if(!item.id)continue;records.set('it_'+base+'_'+idKey(item.id),{
     type:'item',week,code:st.code,id:item.id,plu:item.plu,brand:item.brand||'',description:item.description||'',
     hpp:Number(item.hpp)||0,days:Array.from({length:7},(_,i)=>Number(item.days?.[i])||0)})}
@@ -92,8 +93,8 @@ try{
  function cloudBackup(){const out={version:1,month:window.AreaApp.getState()?.month,week:window.AreaApp.getState()?.week,theme:window.AreaApp.getState()?.theme,settings:window.AreaApp.getState()?.settings,weeks:{},exportedAt:new Date().toISOString()};
   for(const v of valueMap(serverDocs).values()){
    if(!v.week||!v.code)continue;
-   const st=(out.weeks[v.week]??={stores:{}}).stores[v.code]??={code:v.code,name:v.code,targetQty:0,targetNS:0,brandTargets:{},reportedDays:{},items:[]};
-   if(v.type==='store')Object.assign(st,{name:v.name||v.code,targetQty:v.targetQty||0,targetNS:v.targetNS||0,brandTargets:v.brandTargets||{},reportedDays:v.reportedDays||{}});
+   const st=(out.weeks[v.week]??={stores:{}}).stores[v.code]??={code:v.code,name:v.code,targetQty:0,targetNS:0,brandTargets:{},reportedDays:{},clearedDays:{},items:[]};
+   if(v.type==='store')Object.assign(st,{name:v.name||v.code,targetQty:v.targetQty||0,targetNS:v.targetNS||0,brandTargets:v.brandTargets||{},reportedDays:v.reportedDays||{},clearedDays:v.clearedDays||{}});
    else if(v.type==='item')st.items.push({id:v.id,plu:v.plu,brand:v.brand,description:v.description,hpp:v.hpp,days:v.days});
   }
   return out;
