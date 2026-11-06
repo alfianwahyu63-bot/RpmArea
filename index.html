@@ -4,8 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c38"><meta name="description" content="Monitoring POINT QTY 50% + Net Sales 50% untuk 12 toko dalam satu area, dengan input 7 hari dan sinkronisasi opsional.">
 <title>RpmArea · Weekly Performance</title>
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" href="./icon-192.png"><link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./style.css?v=32">
-<link rel="stylesheet" href="./insights.css?v=28">
+<link rel="stylesheet" href="./style.css?v=34">
+<link rel="stylesheet" href="./insights.css?v=34">
 </head>
 <body data-theme="neon">
 <div id="app" class="app">
@@ -73,7 +73,15 @@
    <section class="surface insight-panel" aria-labelledby="insightForecastTitle">
     <div class="insight-heading"><div><span class="insight-kicker">✦ ANALISIS RPM • V28</span><h3 id="insightForecastTitle">Prediksi akhir minggu &amp; perbandingan hari</h3><p>Estimasi linear berdasarkan pencapaian kumulatif sampai tanggal pilihan.</p></div><span class="pill muted" id="insightForecastAsOf">—</span></div>
     <div id="insightForecast" class="insight-grid" aria-live="polite"></div>
-    <div class="insight-actions"><button class="btn primary" id="insightCopyWA" type="button">📋 Salin Laporan WA</button><button class="btn secondary" id="insightShareWA" type="button">↗ Bagikan ke WhatsApp</button></div>
+    <div class="insight-wa-builder" aria-label="Buat laporan WhatsApp">
+      <label class="insight-wa-format" for="insightWAMode">Format laporan WhatsApp
+       <select id="insightWAMode"><option value="acv-store">ACV by Store · seperti contoh supervisi</option><option value="detail">Ringkasan lengkap · format lama</option></select>
+      </label>
+      <p class="insight-wa-help">ACV = jumlah brand/item pada Resume per Brand yang POINT-nya mencapai Time Factor di tanggal terpilih; brand tanpa target lengkap tidak dihitung.</p>
+      <pre id="insightWAPreview" class="insight-report-preview" aria-live="polite">Menyiapkan laporan...</pre>
+      <div class="insight-actions"><button class="btn primary" id="insightCopyWA" type="button">📋 Salin Laporan WA</button><button class="btn secondary" id="insightShareWA" type="button">↗ Bagikan Teks ke WhatsApp</button><button class="btn secondary" id="insightSharePhotoWA" type="button">🖼️ Bagikan Foto + Teks</button></div>
+      <p class="insight-wa-help">Foto memakai template gambar Resume per Brand yang dipilih di bawah. Jika HP tidak mendukung berbagi foto langsung, PNG akan diunduh dan teks disalin agar bisa dilampirkan secara manual.</p>
+    </div>
     <p class="insight-note">Angka proyeksi bukan hasil pasti. Target 100% adalah POINT akhir minggu, bukan Time Factor harian. Laporan menggunakan data lokal yang tampil saat ini; cek status sinkronisasi sebelum membagikan.</p>
    </section>
    <section class="surface insight-panel" aria-labelledby="insightRankingTitle">
@@ -198,7 +206,7 @@ Kode Toko: SC94
 <dialog id="textDialog" class="modal"><div class="modal-head"><div><small>PERSONALISASI</small><h3>Judul & Keterangan</h3></div><button class="close" type="button" data-close="textDialog">×</button></div><form id="editTextForm"><label>Nama Aplikasi<input name="appName" maxlength="50"></label><label>Judul Utama<input name="title" maxlength="90"></label><label>Keterangan<textarea name="description" rows="3" maxlength="300"></textarea></label><label>Nama Area<input name="area" maxlength="50"></label><button class="btn primary block" type="submit">Simpan Teks</button></form></dialog>
 <dialog id="storeDialog" class="modal"><div class="modal-head"><div><small>MASTER TOKO</small><h3 id="storeDialogTitle">Tambah Toko</h3></div><button class="close" type="button" data-close="storeDialog">×</button></div><form id="storeForm"><input type="hidden" name="oldCode"><label>Kode Toko<input name="code" required maxlength="40" placeholder="Contoh: RPM01"></label><label>Nama Toko<input name="name" required maxlength="100" placeholder="Nama toko"></label><label>Target QTY (1 minggu)<input name="targetQty" required type="number" min="0" step="any"></label><label>Target NS (1 minggu)<input name="targetNS" required type="number" min="0" step="any"></label><button class="btn primary block" type="submit">Simpan Toko</button></form></dialog>
 <dialog id="pluDialog" class="modal"><div class="modal-head"><div><small>KATALOG MINGGUAN</small><h3>Tambah PLU</h3></div><button class="close" type="button" data-close="pluDialog">×</button></div><form id="pluForm"><label>PLU<input name="plu" maxlength="50" required placeholder="Kode PLU"></label><label>Brand (opsional)<input name="brand" maxlength="70"></label><label>Deskripsi Produk<input name="description" maxlength="180" required></label><label>HPP / Harga per unit<input name="hpp" type="number" min="0" step="any" value="0"></label><button class="btn primary block" type="submit">Tambahkan</button></form></dialog>
-<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>SUPABASE · MULTI PENGGUNA <span class="rpm-build-pill">V32 · SUPABASE</span></small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-quota-tip">🟢 V32 memakai Supabase: pemeriksaan data berubah setiap 90 detik saat online. Sinkronisasi akan aktif setelah konfigurasi Supabase, tabel SQL, dan akun anggota disiapkan. Jangan hapus data HP.</p><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Menyiapkan koneksi Supabase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Supabase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
+<dialog id="cloudDialog" class="modal cloud-modal"><div class="modal-head"><div><small>SUPABASE · MULTI PENGGUNA <span class="rpm-build-pill">V33 · SUPABASE</span></small><h3>Sinkronisasi Cloud</h3></div><button class="close" type="button" data-close="cloudDialog">×</button></div><div class="cloud-note">Area 12 Toko menggunakan workspace terpisah <b>rpm-area-12</b>, sehingga data tidak bercampur dengan dashboard RPM per brand.</div><p class="cloud-quota-tip">🟢 V33 memakai Supabase: pemeriksaan data berubah setiap 90 detik saat online. Sinkronisasi akan aktif setelah konfigurasi Supabase, tabel SQL, dan akun anggota disiapkan. Jangan hapus data HP.</p><div class="cloud-rescue"><a href="./recovery.html" target="_blank" rel="noopener" class="btn secondary">🛟 Pusat Pemulihan Data (hanya baca)</a></div><p class="cloud-status" id="cloudStatus">Mode lokal. Menyiapkan koneksi Supabase…</p><form id="cloudLogin"><label>Email Anggota Tim<input id="cloudEmail" type="email" required placeholder="email@contoh.com" autocomplete="username"></label><label>Password<input id="cloudPassword" type="password" required placeholder="Password Supabase" autocomplete="current-password"></label><button class="btn primary block" id="cloudLoginBtn" type="submit">🔒 Masuk & Sinkronkan</button></form><div id="cloudAuthed" hidden>
   <section class="cloud-progress" id="cloudProgress" hidden aria-label="Kemajuan penyimpanan cloud">
     <div class="cloud-progress-heading">
       <div><small>PROGRES SINKRONISASI</small><strong id="cloudProgressTitle">Menyiapkan data...</strong></div>
@@ -212,9 +220,15 @@ Kode Toko: SC94
   </section>
   <section id="cloudConflict" class="cloud-conflict" hidden>
   <strong>⚠️ Data lokal dan cloud tidak sama</strong><p id="cloudConflictText">Sinkronisasi dihentikan untuk melindungi data.</p>
-  <button type="button" class="btn primary cloud-resync-main" id="cloudResyncNow">🔄 SINKRONISASI ULANG AMAN</button><div class="inline-actions cloud-resync-actions"><button type="button" class="btn secondary" id="cloudExportLocal">↓ Backup Lokal</button><button type="button" class="btn secondary" id="cloudExportRemote">↓ Backup Cloud</button><button type="button" class="btn primary" id="cloudResumeSafe" hidden>↑ Lanjutkan Data yang Belum Terkirim</button><button type="button" class="btn primary" id="cloudRestoreQty" hidden>✓ Pulihkan QTY 0 di Cloud</button></div><p id="cloudResyncStatus" class="cloud-resync-message" role="status" aria-live="polite">Tombol ini memeriksa dokumen terbaru, memulihkan PLU yang tertinggal di HP, dan menjaga laporan harian yang telah dihapus tetap kosong.</p>
+  <div id="cloudCatalogQuickFix" class="cloud-catalog-quickfix" hidden>
+   <div class="cloud-quick-title">🗑️ PLU di Cloud sudah tidak ada di HP</div>
+   <p id="cloudCatalogQuickText">Pilih PLU yang ingin dikeluarkan dari Cloud. Belum ada data yang dihapus.</p>
+   <button type="button" class="btn primary block" id="cloudCatalogQuickScan">🔎 TINJAU PLU CLOUD YANG AKAN DIHAPUS</button>
+   <small>Setelah meninjau, simpan kedua backup dan konfirmasi penghapusan. Data toko dan PLU lainnya tetap aman.</small>
+  </div>
+  <button type="button" class="btn secondary cloud-resync-main" id="cloudResyncNow">🔄 SINKRONISASI ULANG AMAN</button><div class="inline-actions cloud-resync-actions"><button type="button" class="btn secondary" id="cloudExportLocal">↓ Backup Lokal</button><button type="button" class="btn secondary" id="cloudExportRemote">↓ Backup Cloud</button><button type="button" class="btn primary" id="cloudResumeSafe" hidden>↑ Lanjutkan Data yang Belum Terkirim</button><button type="button" class="btn primary" id="cloudRestoreQty" hidden>✓ Pulihkan QTY 0 di Cloud</button></div><p id="cloudResyncStatus" class="cloud-resync-message" role="status" aria-live="polite">Tombol ini memeriksa dokumen terbaru, memulihkan PLU yang tertinggal di HP, dan menjaga laporan harian yang telah dihapus tetap kosong.</p>
   <p id="cloudRepairMessage" class="cloud-repair-message" hidden></p>
-  <p class="cloud-small">Sinkronisasi Ulang Aman tidak menghapus PLU; PLU Cloud-only justru dapat dikembalikan ke HP. Untuk menghapus PLU Cloud yang sudah dibuang dari daftar HP, gunakan menu PLU Cloud Ikuti Daftar Lokal di bawah.</p>
+  <p class="cloud-small">⚠️ Sinkronisasi Ulang Aman bisa mengembalikan PLU dari Cloud ke HP. Bila Anda memang sudah menghapus PLU di HP, gunakan tombol <b>TINJAU PLU CLOUD YANG AKAN DIHAPUS</b> di atas.</p>
 </section>
  <section id="cloudCatalogSection" class="cloud-catalog" aria-labelledby="cloudCatalogHeading">
   <h4 id="cloudCatalogHeading">🧹 PLU Cloud Ikuti Daftar Lokal</h4>
@@ -224,7 +238,7 @@ Kode Toko: SC94
   <div id="cloudCatalogCandidates" hidden>
     <label class="cloud-catalog-checkall"><input type="checkbox" id="cloudCatalogAll" checked> Pilih semua PLU yang ditemukan</label>
     <div id="cloudCatalogList" class="cloud-catalog-list" role="group" aria-label="Daftar PLU Cloud yang boleh dihapus"></div>
-    <p class="cloud-catalog-tip">⚠️ QTY historis milik PLU terpilih juga akan hilang dari Cloud. Data akan dicadangkan sebelum menghapus. Perangkat lain harus memakai V32 dan mendapat pembaruan sebelum input kembali.</p>
+    <p class="cloud-catalog-tip">⚠️ QTY historis milik PLU terpilih juga akan hilang dari Cloud. Data akan dicadangkan sebelum menghapus. Perangkat lain harus memakai V33 dan mendapat pembaruan sebelum input kembali.</p>
     <div class="inline-actions"><button type="button" id="cloudCatalogBackupLocal" class="btn secondary">↓ Backup Lokal (wajib)</button><button type="button" id="cloudCatalogBackupCloud" class="btn secondary">↓ Backup Cloud (wajib)</button></div>
     <button type="button" id="cloudCatalogDelete" class="btn danger block" disabled>🗑️ Hapus PLU Terpilih dari Cloud</button>
   </div>
@@ -256,14 +270,14 @@ Kode Toko: SC94
 <script src="./excel.js?v=20"></script>
 <script src="./supabase-config.js?v=22"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./data-guard.js?v=20"></script>
-<script src="./safe-merge.js?v=31"></script>
-<script src="./catalog-delete.js?v=32"></script>
-<script src="./insights.js?v=28"></script>
-<script src="./daily-clear.js?v=31"></script>
-<script src="./app.js?v=32"></script>
-<script src="./supabase-rest.js?v=32"></script>
-<script type="module" src="./cloud.js?v=32"></script>
-<script src="./quota-trend.js?v=27"></script>
-<script type="module" src="./quota.js?v=27"></script>
+<script src="./data-guard.js?v=33"></script>
+<script src="./safe-merge.js?v=33"></script>
+<script src="./catalog-delete.js?v=33"></script>
+<script src="./insights.js?v=34"></script>
+<script src="./daily-clear.js?v=33"></script>
+<script src="./app.js?v=34"></script>
+<script src="./supabase-rest.js?v=33"></script>
+<script type="module" src="./cloud.js?v=33"></script>
+<script src="./quota-trend.js?v=33"></script>
+<script type="module" src="./quota.js?v=33"></script>
 </body></html>

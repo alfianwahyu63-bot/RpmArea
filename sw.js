@@ -1,4 +1,4 @@
-const CACHE='salespulse-area12-cache-v32-catalog-delete-1';
+const CACHE='salespulse-area12-cache-v34-whatsapp-acv-1';
 const PRECACHE=['./','./index.html','./style.css','./app.js','./data-guard.js','./safe-merge.js','./catalog-delete.js','./daily-clear.js','./recovery.html','./recovery-firebase.html','./excel.js','./vendor/jszip.min.js','./supabase-config.js','./firebase-config.js','./supabase-rest.js','./cloud.js','./quota.js','./quota-trend.js','./insights.js','./insights.css','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(async cache=>{const results=await Promise.allSettled(PRECACHE.map(async path=>{const response=await fetch(path,{cache:'reload'});if(response.ok)await cache.put(path,response)}));self.skipWaiting()}))});
 self.addEventListener('activate',e=>{e.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()]))});

@@ -40,3 +40,12 @@
 .insight-quality-item.ok{background:rgba(39,192,129,.08);border-color:rgba(39,192,129,.2);color:#a4f0c3}
 @media(max-width:760px){.insight-grid{grid-template-columns:1fr 1fr}.insight-stat:last-child{grid-column:1/-1}.insight-advisor-cards{grid-template-columns:1fr}}
 @media(max-width:400px){.insight-grid{grid-template-columns:1fr}.insight-stat:last-child{grid-column:auto}.insight-heading{align-items:stretch}.insight-dropdown{width:100%}.insight-dropdown select{width:100%}.insight-actions .btn{flex:1 1 auto;min-width:0}.insight-rank-row{grid-template-columns:30px minmax(0,1fr) 75px;gap:8px;padding:10px 8px}}
+
+/* V34: laporan WA berbentuk caption singkat + opsi tabel PNG. */
+.insight-wa-builder{margin-top:18px;border:1px solid var(--line,rgba(255,255,255,.15));background:rgba(9,20,31,.26);border-radius:16px;padding:14px}
+.insight-wa-format{display:grid;gap:8px;color:var(--muted,#a1abb4);font-size:12px;font-weight:700}
+.insight-wa-format select{width:100%;min-width:0;max-width:100%;padding:12px;border-radius:12px;border:1px solid rgba(162,201,216,.24);background:#0d1822;color:#eaf4f7;font-size:13px}
+.insight-wa-help{margin:10px 0;color:var(--muted,#a1abb4);font-size:12px;line-height:1.55}
+.insight-wa-builder .insight-report-preview{margin:12px 0 0;max-height:300px;overflow:auto;color:#e9f5eb;font-size:13px;line-height:1.65;overflow-wrap:anywhere;white-space:pre-wrap}
+.insight-wa-builder .insight-actions{margin-top:12px}
+@media(max-width:760px){.insight-wa-builder .insight-actions .btn{width:100%}}

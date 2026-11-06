@@ -81,6 +81,42 @@ function whatsappReport(stores,week,date,areaName='AREA RPM'){
  ...(p?[`📈 ${p.completed?'Hasil akhir':'Proyeksi akhir minggu'}: ${percent(p.point)} (${p.completed?'final':'perkiraan linear'})`]:[]),
  '', '⚠️ TOKO PRIORITAS',...(under.length?under.sort((a,b)=>a.point-b.point).slice(0,5).map((r,i)=>`${i+1}. ${r.code} ${r.name} — ${percent(r.point)}`):['Tidak ada toko valid di bawah TF.']),
  ...(total.missing?['',`⚠️ ${total.missing} toko belum punya target lengkap; total area hanya mencakup toko bertarget.`]:[]),'',`_Perhitungan POINT: 50% QTY + 50% NS. Prediksi bukan jaminan hasil._`].join('\n')}
-root.RpmInsights={daysElapsed,totals,combined,rank,brands,projection,daily,missingReports,quality,warnings,advisor,neededUnits,whatsappReport,fmt,cash,percent};
+/* V34 — laporan WA gaya supervisi: angka ACV sama dengan kolom ACV ITEM pada
+   Resume per Brand: jumlah brand dengan target QTY+NS lengkap dan POINT >= TF.
+   Hitung ulang berdasarkan tanggal pilihan; tidak melakukan perubahan data. */
+function whatsappAcvByStore(stores,week,date){
+ const day=daysElapsed(week,date),tf=day/7*100;
+ const ordered=[...(stores||[])];
+ // Urutan contoh supervisi dipakai jika nama/kode toko cocok; sisanya tetap urutan dashboard.
+ const reference=['LMR','SWGN','RGL','CEA','GDL','POW','PUI','PLN','BCN','PIN2','PIN','PLJ'];
+ const shortName=st=>{
+  const code=String(st.code||'').trim(),name=String(st.name||'').trim();
+  const preferred=String(st.waName||st.shortName||'').trim();
+  return preferred|| (reference.includes(name.toUpperCase())?name:reference.includes(code.toUpperCase())?code:(name&&name.length<=18?name:code||name||'Toko'));
+ };
+ const rankName=st=>reference.indexOf(shortName(st).toUpperCase());
+ ordered.sort((a,b)=>{const ra=rankName(a),rb=rankName(b);return (ra<0?999:ra)-(rb<0?999:rb)});
+ const rows=ordered.map(st=>{
+  // Fungsi brands() menyatukan daftar brand dari target dan item tanpa menggandakan ejaan.
+  const list=brands([st]);let achieved=0,withTarget=0;
+  for(const brand of list){const r=totals(st,day,brand);if(r.point===null)continue;withTarget++;if(day>0&&r.point>=tf)achieved++}
+  return{code:String(st.code||''),label:shortName(st),achieved,withTarget};
+ });
+ return{rows,day,tf};
+}
+function whatsappReportSupervisi(stores,week,date){
+ const start=iso(week),end=start?new Date(Date.parse(start+'T12:00:00Z')+6*86400000).toISOString().slice(0,10):null;
+ if(!start||!end||!iso(date))return '';
+ const a=new Date(start+'T12:00:00Z'),b=new Date(end+'T12:00:00Z');
+ const name=d=>d.toLocaleDateString('id-ID',{month:'long',timeZone:'UTC'});
+ const dd=d=>String(d.getUTCDate()).padStart(2,'0');
+ const period=a.getUTCMonth()===b.getUTCMonth()&&a.getUTCFullYear()===b.getUTCFullYear()
+  ?`${dd(a)}-${dd(b)} ${name(a)}`
+  :`${dd(a)} ${name(a)} - ${dd(b)} ${name(b)}${a.getUTCFullYear()!==b.getUTCFullYear()?` ${b.getUTCFullYear()}`:''}`;
+ const {rows,day}=whatsappAcvByStore(stores,week,date);
+ return [`*Report RPM ${period}*`,`Secara Time Factor *${day} hk*`,'','• *ACV by Store*',
+  ...(rows.length?rows.map((r,i)=>`${i+1}. ${r.label} Acv ${r.achieved} item`):['Belum ada data toko untuk minggu ini.'])].join('\n');
+}
+root.RpmInsights={daysElapsed,totals,combined,rank,brands,projection,daily,missingReports,quality,warnings,advisor,neededUnits,whatsappReport,whatsappAcvByStore,whatsappReportSupervisi,fmt,cash,percent};
 if(typeof module!=='undefined'&&module.exports)module.exports=root.RpmInsights;
 })(typeof window!=='undefined'?window:globalThis);

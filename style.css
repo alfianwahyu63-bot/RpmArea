@@ -704,3 +704,12 @@ body{color:var(--ink)}
 .cloud-catalog-tip{color:#f9d7ab!important}
 .cloud-catalog .inline-actions{margin:10px 0;display:flex;flex-wrap:wrap;gap:8px}
 .cloud-catalog .btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* V33: make the one-PLU cloud discrepancy actionable immediately on mobile. */
+.cloud-catalog-quickfix{margin:14px 0;padding:14px;border-radius:15px;border:1px solid rgba(133,247,155,.55);background:rgba(14,82,58,.65)}
+.cloud-catalog-quickfix .cloud-quick-title{font-size:15px;font-weight:900;color:#b2ffd0}
+.cloud-catalog-quickfix p{color:#effff6;font-size:13px;line-height:1.6}
+.cloud-catalog-quickfix small{display:block;font-size:11px;line-height:1.55;margin-top:10px;color:#d2ebdc}
+.cloud-catalog-quickfix .btn{width:100%;white-space:normal;min-height:58px;font-weight:900;font-size:13px;background:linear-gradient(110deg,#a8fa6e,#28c9b9);color:#0c2025;border:0}
+#cloudConflict #cloudCatalogQuickFix[hidden],#cloudConflict #cloudResyncNow[hidden]{display:none!important}
+#cloudCatalogSection{scroll-margin-top:18px}

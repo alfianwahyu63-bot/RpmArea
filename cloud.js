@@ -1,4 +1,4 @@
-/* RpmArea V32 · sinkronisasi lintas HP via Supabase PostgreSQL & RLS.
+/* RpmArea V33 · sinkronisasi lintas HP via Supabase PostgreSQL & RLS.
    Transaksi atomic compare-and-swap mencegah overwrite perubahan perangkat lain.
    Setiap perubahan menggunakan expected_version dan diverifikasi dengan membaca server.
    Bila request timeout, hasil TIDAK dianggap gagal atau berhasil: cek server kembali, tanpa retry tulis otomatis.
@@ -21,6 +21,7 @@ const el={
  repairNote:$('#cloudRepairMessage'),diag:$('#cloudDiagnosticBtn'),diagResult:$('#cloudDiagnosticResult'),
  sharedStatus:$('#sharedUIStatus'),cloudUIStatus:$('#cloudUIStatus'),checkNow:$('#cloudCheckNow'),
  catalogScan:$('#cloudCatalogScan'),catalogInfo:$('#cloudCatalogInfo'),
+ catalogQuick:$('#cloudCatalogQuickFix'),catalogQuickText:$('#cloudCatalogQuickText'),catalogQuickScan:$('#cloudCatalogQuickScan'),
  catalogWrap:$('#cloudCatalogCandidates'),catalogList:$('#cloudCatalogList'),
  catalogAll:$('#cloudCatalogAll'),catalogDelete:$('#cloudCatalogDelete'),
  catalogBackupLocal:$('#cloudCatalogBackupLocal'),catalogBackupCloud:$('#cloudCatalogBackupCloud')
@@ -129,13 +130,33 @@ try{
   el.conflict.hidden=false;
   const describe=(ids,from)=>ids.slice(0,3).map(id=>{const doc=from.get(id);return doc?.type==='item'?`PLU ${doc.plu} · toko ${doc.code}`:doc?.type==='store'?`toko ${doc.code} · minggu ${doc.week}`:id}).join('; ');
   const example=d.extra.length?' Dokumen hanya Cloud: '+describe(d.extra,server)+'.':d.missing.length?' Dokumen hanya HP: '+describe(d.missing,local)+'.':'';
-  el.conflictText.textContent=`${why}. Lokal: ${local.size} dokumen, Cloud: ${server.size}. Hanya HP: ${d.missing.length}, hanya Cloud: ${d.extra.length}, isi berbeda: ${d.changed.length}.${example} Data belum ditimpa atau dihapus. Gunakan Sinkronisasi Ulang Aman setelah backup.`;
-  status('🛑 Lokal dan Cloud belum sama. Sinkronisasi dihentikan untuk menjaga data. Gunakan tombol Sinkronisasi Ulang Aman.','error','Cloud: Konflik');
+  // When the ONLY difference is cloud-only PLU(s), lead the user to the
+  // opt-in DELETE workflow. 'Safe resync' would restore them back onto the HP.
+  let candidatePlan={items:[]};
+  try{candidatePlan=catalogAPI?.candidates(local,server)||candidatePlan}catch(_err){}
+  const onlyDeletedCatalog=d.missing.length===0&&d.changed.length===0&&
+   d.extra.length>0&&d.extra.every(id=>candidatePlan.items.some(row=>row.id===id));
+  const hasCandidates=candidatePlan.items.length>0;
+  if(el.catalogQuick)el.catalogQuick.hidden=!hasCandidates;
+  if(el.resync)el.resync.hidden=onlyDeletedCatalog;
+  if(hasCandidates){
+   const lead=candidatePlan.items.slice(0,3).map(row=>`Toko ${row.code} · PLU ${row.plu}`).join('; ');
+   el.catalogQuickText.textContent=`${candidatePlan.items.length} PLU hanya ada di Cloud (${lead}). Jika PLU tersebut memang sengaja dihapus dari HP, pilih TINJAU di bawah. Tidak akan terhapus otomatis.`;
+  }
+  const guidance=onlyDeletedCatalog?
+   'Gunakan TINJAU PLU CLOUD YANG AKAN DIHAPUS, bukan Sinkronisasi Ulang Aman.':
+   hasCandidates?'Tinjau PLU yang sudah dihapus di HP sebelum melakukan sinkronisasi ulang.':
+   'Gunakan Sinkronisasi Ulang Aman setelah backup.';
+  el.conflictText.textContent=`${why}. Lokal: ${local.size} dokumen, Cloud: ${server.size}. Hanya HP: ${d.missing.length}, hanya Cloud: ${d.extra.length}, isi berbeda: ${d.changed.length}.${example} Data belum ditimpa atau dihapus. ${guidance}`;
+  status('🛑 Data lokal dan Cloud berbeda. '+guidance,'error','Cloud: Konflik');
   el.restore.hidden=true;el.resume.hidden=true;
-  note('Pilih Sinkronisasi Ulang Aman untuk membandingkan data terbaru. Tidak ada penimpaan otomatis.','warning');
+  note(guidance+' Tidak ada penghapusan otomatis.','warning');
  }
  function setActive(msg='✅ Data lokal telah sama dengan server. Sinkron antar-HP aktif.'){
-  active=true;blocked=false;uncertain=false;el.conflict.hidden=true;rememberConfirmed();
+  active=true;blocked=false;uncertain=false;el.conflict.hidden=true;
+  if(el.catalogQuick)el.catalogQuick.hidden=true;
+  if(el.resync)el.resync.hidden=false;
+  rememberConfirmed();
   status(msg,'ok','Cloud: Aktif');
  }
  function onError(err,heading='Sinkronisasi gagal'){
@@ -267,7 +288,7 @@ try{
  async function scanCatalog(){
   if(!connected||!auth.currentUser){catalogNote('Login Supabase terlebih dahulu.','error');return}
   if(writing||reconciling||loading||catalogBusy){catalogNote('Proses sinkronisasi lain sedang berjalan. Ulangi setelah selesai.','error');return}
-  if(!catalogAPI?.candidates){catalogNote('Modul PLU V32 belum termuat. Refresh aplikasi.','error');return}
+  if(!catalogAPI?.candidates){catalogNote('Modul PLU V33 belum termuat. Refresh aplikasi.','error');return}
   clearCatalog();catalogBusy=true;catalogButtons();catalogNote('⏳ Membaca ulang semua PLU dari Supabase tanpa mengubah data…');
   try{
    const latest=await rest.listRecords(),local=modelMap();
@@ -286,6 +307,8 @@ try{
     label.append(checkbox,span);f.append(label);
    }
    el.catalogList.replaceChildren(f);el.catalogWrap.hidden=false;
+   // Keep the preview visible on small screens and inside the modal scroller.
+   el.catalogWrap.scrollIntoView?.({behavior:'smooth',block:'nearest'});
    catalogNote(`${plan.items.length} PLU hanya ada di Cloud. Pilih yang benar-benar telah dihapus dari HP. `+
      `Dokumen lainnya tidak disentuh.${plan.skipped.length?' '+plan.skipped.length+' dokumen tidak memenuhi syarat dan tidak dapat dipilih.':''}`);
   }catch(err){clearCatalog();catalogNote('Gagal memeriksa Cloud: '+failText(err),'error')}
@@ -298,7 +321,7 @@ try{
   const selected=catalogPreview.items.filter(x=>ids.includes(x.id));
   const qty=selected.reduce((total,x)=>total+x.qty,0);
   const approval=prompt(`PERINGATAN: ${selected.length} PLU dan ${qty} QTY historisnya akan DIHAPUS PERMANEN dari Cloud.\n`+
-   `Data HP tidak ditimpa. Semua perangkat lain harus diperbarui ke V32.\n\n`+
+   `Data HP tidak ditimpa. Semua perangkat lain harus diperbarui ke V33.\n\n`+
    `Ketik persis: HAPUS ${selected.length} PLU`);
   if(approval!==`HAPUS ${selected.length} PLU`){catalogNote('Dibatalkan. Belum ada PLU dihapus.','pending');return}
   if(!confirm('Konfirmasi terakhir: hapus '+selected.length+' PLU yang DIPILIH di Cloud, bukan PLU lainnya?'))return;
@@ -346,6 +369,11 @@ try{
   }finally{catalogBusy=false;reconciling=false;disableActions(false);catalogButtons()}
  }
  // UI for selective, opt-in deletions, never executed by normal sync.
+ el.catalogQuickScan?.addEventListener('click',async()=>{
+  const section=$('#cloudCatalogSection');
+  section?.scrollIntoView?.({behavior:'smooth',block:'start'});
+  await scanCatalog();
+ });
  el.catalogScan?.addEventListener('click',scanCatalog);
  el.catalogList?.addEventListener('change',catalogButtons);
  el.catalogAll?.addEventListener('change',()=>{
@@ -365,7 +393,7 @@ try{
   }catch(err){catalogNote('Backup cloud gagal: '+String(err.message||err),'error')}
  });
  el.catalogDelete?.addEventListener('click',deleteSelectedCatalog);
- function clearConnection(){++version;clearCatalog();connected=false;active=false;blocked=false;uncertain=false;loading=false;writing=false;reconciling=false;quotaPaused=false;lastDeltaAt=0;clearTimeout(debounce);clearTimeout(uiDebounce);clearInterval(pollTimer);serverDocs=new Map();serverValues=new Map();progress();el.conflict.hidden=true;el.upload.hidden=true;el.logged.hidden=true;el.form.hidden=false}
+ function clearConnection(){++version;clearCatalog();connected=false;active=false;blocked=false;uncertain=false;loading=false;writing=false;reconciling=false;quotaPaused=false;lastDeltaAt=0;clearTimeout(debounce);clearTimeout(uiDebounce);clearInterval(pollTimer);serverDocs=new Map();serverValues=new Map();progress();el.conflict.hidden=true;if(el.catalogQuick)el.catalogQuick.hidden=true;if(el.resync)el.resync.hidden=false;el.upload.hidden=true;el.logged.hidden=true;el.form.hidden=false}
  async function start(user){clearConnection();const current=version;lastDeltaAt=Date.now();
   el.logged.hidden=false;el.form.hidden=true;el.user.textContent='👤 '+(user.email||'Pengguna')+' · Area: '+cfg.workspaceId;
   status('🔐 Login berhasil. Memeriksa izin Supabase via HTTPS…','warn','Cloud: Periksa');
@@ -405,7 +433,17 @@ try{
   try{
    const latest=await rest.listRecords(),live=valueMap(latest),local=modelMap();
    serverDocs=latest;serverValues=live;
-   if(!compare(local,live).any){setActive('✅ Cloud dan HP sudah identik. Sinkronisasi kembali aktif.');note('✅ Tidak ada dokumen berbeda.','success');return}
+   const curr=compare(local,live);
+   if(curr.extra.length&&catalogAPI?.candidates){
+    const planOnly=catalogAPI.candidates(local,live);
+    if(curr.extra.every(id=>planOnly.items.some(x=>x.id===id))&&
+       !curr.missing.length&&!curr.changed.length){
+      displayConflict(local,live,'Ada PLU Cloud yang sudah tidak ada di HP');
+      note('⚠️ Sinkronisasi Ulang Aman dibatalkan agar PLU yang sengaja dihapus tidak kembali ke HP. Gunakan TINJAU PLU CLOUD.','warning');
+      return;
+    }
+   }
+   if(!curr.any){setActive('✅ Cloud dan HP sudah identik. Sinkronisasi kembali aktif.');note('✅ Tidak ada dokumen berbeda.','success');return}
    const plan=safeMerge?.build(local,live);
    if(!plan?.ok){displayConflict(local,live,'Konflik belum bisa digabung otomatis');note('⛔ '+(plan?.reason||'Modul safe merge tidak tersedia')+(plan?.issues?.length?' Contoh: '+plan.issues.slice(0,3).join(' | '):'')+' · Download kedua backup untuk pemeriksaan.','error');return}
    const example=(arr)=>arr.slice(0,5).map(x=>`• Toko ${x.code} / PLU ${x.plu}${x.description?' — '+x.description:''}`).join('\n');
