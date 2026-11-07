@@ -2,11 +2,12 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c38"><meta name="description" content="Monitoring POINT QTY 50% + Net Sales 50% untuk 12 toko dalam satu area, dengan input 7 hari dan sinkronisasi opsional.">
-<title>RPM Area V38 · Navigasi Ribbon</title>
+<title>RPM Area V40 · 11 Gaya Navigasi</title>
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" href="./icon-192.png"><link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="stylesheet" href="./style.css?v=36">
 <link rel="stylesheet" href="./insights.css?v=36"><link rel="stylesheet" href="./v35.css?v=36">
-<link rel="stylesheet" href="./nav-flow.css?v=38">
+<link rel="stylesheet" href="./nav-styles.css?v=40">
+<link rel="stylesheet" href="./nav-settings.css?v=40">
 </head>
 <body data-theme="neon">
 <div id="app" class="app">
@@ -14,7 +15,7 @@
    <div class="logo"><img src="./icon-192.png" alt="Logo RPM"><div><strong id="sideBrand">SalesPulse Area</strong><small id="sideSubtitle">MONITORING 12 TOKO</small></div></div>
    <div class="side-label">MENU AREA</div>
    <nav class="nav nav-modern" aria-label="Menu monitoring area">
-    <button type="button" class="navbtn active" data-page="dashboard" aria-label="Dashboard monitoring area" title="Dashboard monitoring area"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2.7" y="3.4" width="7.65" height="7.65" rx="2"/><rect x="13.6" y="3.4" width="7.65" height="4.7" rx="1.8"/><rect x="13.6" y="11.4" width="7.65" height="9.1" rx="2"/><rect x="2.7" y="14.3" width="7.65" height="6.2" rx="2"/></svg></span><span class="nav-text">Dashboard Area</span><span class="nav-short" aria-hidden="true">Dashboard</span></button>
+    <button type="button" class="navbtn active" data-page="dashboard" aria-label="Dashboard monitoring area" title="Dashboard monitoring area"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="2.7" y="3.4" width="7.65" height="7.65" rx="2"/><rect x="13.6" y="3.4" width="7.65" height="4.7" rx="1.8"/><rect x="13.6" y="11.4" width="7.65" height="9.1" rx="2"/><rect x="2.7" y="14.3" width="7.65" height="6.2" rx="2"/></svg></span><span class="nav-text">Dashboard Area</span><span class="nav-short" aria-hidden="true">Home</span></button>
     <button type="button" class="navbtn " data-page="input" aria-label="Input penjualan harian" title="Input penjualan harian"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 3.6h8.1a2 2 0 0 1 2 2v14.1a1.4 1.4 0 0 1-2.25 1.12L14 19.3l-2.1 1.52a1.4 1.4 0 0 1-1.65 0L8.2 19.3 6.3 20.82a1.4 1.4 0 0 1-2.25-1.12V7.1A3.5 3.5 0 0 1 7.55 3.6Z"/><path d="M8.4 9.1h6.9M8.4 12.3h6.9M8.4 15.5h4.3" stroke-linecap="round"/><path d="m17.6 5.1 2.1 2.1M16.5 8.3l3.1-3.1" stroke-linecap="round"/></svg></span><span class="nav-text">Input 7 Hari</span><span class="nav-short" aria-hidden="true">Input</span></button>
     <button type="button" class="navbtn" data-page="goals" aria-label="Target 100 persen per toko, brand dan PLU" title="Simulasi kekurangan QTY dan NS per toko dan brand"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="8.7"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2"/><path d="m14.5 9.5 5-5M16.8 4.5h2.7v2.7"/></svg></span><span class="nav-text">Target 100% · PLU</span><span class="nav-short" aria-hidden="true">Target</span></button>
     <button type="button" class="navbtn " data-page="stores" aria-label="Master toko dan upload Excel" title="Master toko dan upload Excel"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4.2 10.2v9.4c0 .7.6 1.2 1.2 1.2h13.2c.7 0 1.2-.5 1.2-1.2v-9.4"/><path d="m3.4 6.5 1.7-3.2h13.8l1.7 3.2.6 3.2a2.3 2.3 0 0 1-4.45.7 2.4 2.4 0 0 1-4.7 0 2.4 2.4 0 0 1-4.7 0 2.3 2.3 0 0 1-4.45-.7Z"/><path d="M9 20.8v-6.6h6v6.6"/></svg></span><span class="nav-text">Master Toko & Excel</span><span class="nav-short" aria-hidden="true">Toko</span></button>
@@ -198,6 +199,21 @@ Kode Toko: SC94
         <div class="style-options"><label class="settings-toggle"><span><strong>Efek glow</strong><small>Efek cahaya pada kartu dan tombol.</small></span><input type="checkbox" id="settingGlow" checked></label><label class="settings-toggle"><span><strong>Tampilan ringkas</strong><small>Perkecil jarak antar kartu untuk layar HP.</small></span><input type="checkbox" id="settingCompact"></label></div>
       </section>
       <section class="surface setting-preview"><div class="setting-headline"><div><h3>Pratinjau warna</h3><p>Kartu contoh mengikuti tema terpilih.</p></div></div><div class="setting-mini-grid"><div class="preview-card"><span>QTY ACHIEVEMENT</span><strong>87,5%</strong><div class="preview-track"><i style="width:87.5%"></i></div></div><div class="preview-card secondary"><span>AREA POINT</span><strong>92,8%</strong><div class="preview-track"><i style="width:92.8%"></i></div></div></div></section>
+      <section id="rpm-nav-v40-panel" class="surface setting-surface rpm-nav-setting" aria-label="Pilihan gaya navigasi">
+        <div class="setting-headline"><div><h3>🧭 Gaya Navigasi — 11 Pilihan</h3><p>Setiap tema warna punya gaya navigasi rekomendasi sendiri. Bisa diganti sesuai selera.</p></div><span class="setting-chip">V40 · LIVE PREVIEW</span></div>
+        <div class="rpm-nav-live" aria-live="polite">
+          <div><small>NAVIGASI TEMA <span id="rpm-nav-current-theme">—</span></small><strong id="rpm-nav-current-name">—</strong><div class="rpm-nav-current-label" id="rpm-nav-current-status">Mengikuti tema</div></div>
+          <div class="rpm-nav-theme-chip">◉ Preview langsung</div>
+        </div>
+        <p class="rpm-nav-section-intro">Ketuk salah satu kartu untuk <b>melihat hasilnya langsung</b> pada menu bawah. Jika cocok, tekan <b>Terapkan</b>. Pengaturan ini berbeda untuk setiap tema warna.</p>
+        <div id="rpm-nav-v40-grid" class="rpm-nav-v40-grid" aria-label="Daftar gaya navigasi"></div>
+        <div class="rpm-nav-actions">
+          <button id="rpm-nav-apply" class="btn primary" type="button">✓ Terapkan untuk Tema Ini</button>
+          <button id="rpm-nav-reset" class="btn secondary" type="button">↺ Rekomendasi Tema</button>
+        </div>
+        <button id="rpm-nav-reset-all" class="rpm-nav-reset-all" type="button">Kembalikan navigasi semua tema ke pengaturan awal</button>
+        <p class="rpm-nav-note">🛡️ Pilihan navigasi tersimpan pada perangkat ini, terpisah dari database dan sinkronisasi Supabase. Toko, PLU, QTY, NS, target, dan laporan tidak berubah.</p>
+      </section>
     </div>
     <div id="settingsTextPanel" class="settings-panel" role="tabpanel">
       <section class="surface setting-surface"><div class="setting-headline"><div><h3>Edit semua tulisan dashboard</h3><p>Ubah label apa saja di bawah ini. Matikan <b>Tampil</b> jika teks ingin dikosongkan. Nilai penjualan tetap otomatis.</p></div><span id="textItemCount" class="setting-chip">—</span></div>
@@ -300,5 +316,6 @@ Kode Toko: SC94
 <script type="module" src="./cloud.js?v=33"></script>
 <script src="./quota-trend.js?v=33"></script>
 <script type="module" src="./quota.js?v=33"></script>
-<script src="./nav-flow.js?v=38"></script>
+<script src="./nav-flow.js?v=40"></script>
+<script src="./nav-settings.js?v=40"></script>
 </body></html>

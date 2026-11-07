@@ -1,0 +1,348 @@
+/* RPM Area V40 — 11 navigasi berdasar referensi UI, CSS-only visual layer.
+   Semua gaya memakai satu struktur 5-tab; 3 menu lain tersedia via Lainnya.
+   Pilihan disimpan per tema di localStorage, sehingga tidak memengaruhi data toko/cloud. */
+@media (max-width: 920px) {
+  body {
+    --rpm-nav-accent:#7958ef;
+    --rpm-nav-accent-soft:#ece8ff;
+  }
+  body[data-theme="neon"] { --rpm-nav-accent:#87d760; --rpm-nav-accent-soft:#eaf9dd; }
+  body[data-theme="violet"] { --rpm-nav-accent:#855de9; --rpm-nav-accent-soft:#ebe5ff; }
+  body[data-theme="coral"] { --rpm-nav-accent:#e86d7c; --rpm-nav-accent-soft:#fff0ef; }
+  body[data-theme="cyber"] { --rpm-nav-accent:#4e9ded; --rpm-nav-accent-soft:#e5f4ff; }
+  body[data-theme="aurora"] { --rpm-nav-accent:#6b5cec; --rpm-nav-accent-soft:#eeeaff; }
+  body[data-theme="midnight"] { --rpm-nav-accent:#7266ff; --rpm-nav-accent-soft:#ecebff; }
+  body[data-theme="ocean"] { --rpm-nav-accent:#1c9eab; --rpm-nav-accent-soft:#e4f9f6; }
+  body[data-theme="sunset"] { --rpm-nav-accent:#ec8a5f; --rpm-nav-accent-soft:#fff0e7; }
+  body[data-theme="forest"] { --rpm-nav-accent:#419f85; --rpm-nav-accent-soft:#e2f9f0; }
+
+  .sidebar {
+    --rpm-base:#ffffff;
+    --rpm-foreground:#767981;
+    --rpm-selected:var(--rpm-nav-accent);
+    --rpm-outline:#fff;
+    box-sizing:border-box !important;
+    position:fixed !important;
+    inset:auto auto calc(14px + env(safe-area-inset-bottom,0px)) 50% !important;
+    transform:translateX(-50%) !important;
+    width:min(490px,calc(100vw - 24px)) !important;
+    min-width:0 !important;
+    height:75px !important;
+    min-height:0 !important;
+    display:flex !important;
+    justify-content:center !important;
+    align-items:center !important;
+    margin:0 !important;
+    padding:8px !important;
+    overflow:visible !important;
+    isolation:isolate;
+    border:1px solid rgba(0,0,0,.06) !important;
+    border-radius:23px !important;
+    background:var(--rpm-base) !important;
+    box-shadow:0 15px 35px rgba(0,0,0,.30),0 1px 2px rgba(0,0,0,.08) !important;
+    z-index:100 !important;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .25s ease,box-shadow .25s ease,border-radius .25s ease;
+  }
+  .sidebar > .logo, .sidebar .side-label, .sidebar .side-bottom,
+  .sidebar .rpm-brand-disc,.sidebar > .rpm-flow-svg {display:none !important;}
+  .sidebar nav.nav-modern {
+    display:grid !important;
+    position:relative !important;
+    grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+    justify-content:stretch !important;
+    align-items:stretch !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    gap:1px !important;
+    overflow:visible !important;
+    isolation:isolate;
+    z-index:1;
+  }
+  .sidebar nav.nav-modern > .navbtn[data-page="history"],
+  .sidebar nav.nav-modern > .navbtn[data-page="tools"],
+  .sidebar nav.nav-modern > .navbtn[data-page="settings"]{display:none !important;}
+  .sidebar nav.nav-modern > .navbtn,
+  .sidebar nav.nav-modern > .rpm-more-button {
+    box-sizing:border-box !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex-direction:column !important;
+    position:relative !important;
+    flex:none !important;
+    min-width:0 !important;
+    width:100% !important;
+    max-width:none !important;
+    height:100% !important;
+    min-height:48px !important;
+    margin:0 !important;
+    padding:5px 0 4px !important;
+    border:0 !important;
+    outline:0;
+    border-radius:14px !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    color:var(--rpm-foreground) !important;
+    gap:3px !important;
+    text-align:center !important;
+    transform:none;
+    transition:color .20s ease,background .20s ease,transform .22s ease;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sidebar .nav-modern > :is(.navbtn,.rpm-more-button)::before,
+  .sidebar .nav-modern > :is(.navbtn,.rpm-more-button)::after{content:none !important;}
+  .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button) .nav-icon {
+    box-sizing:border-box !important;
+    flex:0 0 25px !important;
+    display:grid !important;
+    place-items:center !important;
+    position:relative;
+    width:26px !important;
+    height:26px !important;
+    padding:0 !important;
+    margin:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    color:inherit !important;
+    font-size:22px !important;
+    line-height:1 !important;
+    transform:none !important;
+    transition:transform .22s ease;
+  }
+  .sidebar nav.nav-modern .nav-icon svg {
+    width:23px !important;
+    height:23px !important;
+    fill:none !important;
+    stroke:currentColor !important;
+    stroke-width:1.9 !important;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .sidebar nav.nav-modern .nav-text {display:none !important;}
+  .sidebar nav.nav-modern .nav-short {
+    display:block !important;
+    min-width:0 !important;
+    width:100% !important;
+    min-height:12px !important;
+    color:inherit !important;
+    text-align:center !important;
+    font:650 10px/1.15 system-ui,-apple-system,sans-serif !important;
+    letter-spacing:-.2px;
+    white-space:nowrap !important;
+  }
+  .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active {
+    color:var(--rpm-selected) !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    transform:none;
+  }
+  .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active .nav-icon {
+    color:inherit !important;
+    background:transparent !important;
+  }
+  .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button):focus-visible {
+    outline:3px solid var(--rpm-nav-accent) !important;
+    outline-offset:-3px;
+  }
+  .main {padding-bottom:calc(118px + env(safe-area-inset-bottom,0px)) !important;}
+  .toast {bottom:calc(111px + env(safe-area-inset-bottom,0px)) !important;}
+
+  /* 01 — Minimal Clean: flush white footer, precise restrained indicator */
+  body[data-rpm-nav="minimal"] .sidebar {
+    inset:auto auto 0 50% !important;
+    width:100vw !important;
+    max-width:none !important;
+    height:calc(69px + env(safe-area-inset-bottom,0px)) !important;
+    padding:6px 12px calc(5px + env(safe-area-inset-bottom,0px)) !important;
+    background:#fff !important;
+    border:0 !important;
+    border-top:1px solid #e9eaf0 !important;
+    border-radius:0 !important;
+    box-shadow:0 -6px 20px rgba(0,0,0,.055) !important;
+  }
+  body[data-rpm-nav="minimal"] .sidebar {--rpm-foreground:#757984;--rpm-selected:#222635}
+  body[data-rpm-nav="minimal"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active::after {
+    content:'' !important;
+    position:absolute;bottom:0;left:calc(50% - 3px);height:5px;width:5px;border-radius:50%;background:var(--rpm-nav-accent);
+  }
+  /* 02 — Glassmorphism: translucent blur with coloured reflections */
+  body[data-rpm-nav="glass"] .sidebar {
+    --rpm-base:linear-gradient(105deg,rgba(110,102,224,.62),rgba(163,107,201,.59),rgba(250,121,167,.50));
+    --rpm-foreground:rgba(255,255,255,.72);
+    --rpm-selected:#fff;
+    border:1px solid rgba(255,255,255,.40) !important;
+    background:var(--rpm-base) !important;
+    backdrop-filter:blur(22px) saturate(1.5) !important;
+    -webkit-backdrop-filter:blur(22px) saturate(1.5) !important;
+    box-shadow:0 17px 37px rgba(18,10,54,.30),inset 0 1px 2px rgba(255,255,255,.45) !important;
+    border-radius:28px !important;
+  }
+  body[data-rpm-nav="glass"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active {background:rgba(255,255,255,.17) !important;}
+  body[data-rpm-nav="glass"] .sidebar nav.nav-modern .nav-icon {filter:drop-shadow(0 2px 3px rgba(40,25,82,.15));}
+  /* 03 — Floating Detached: airy, elevated centre action */
+  body[data-rpm-nav="floating"] .sidebar {
+    --rpm-foreground:#8c8d9b;--rpm-selected:#6552ca;
+    bottom:calc(21px + env(safe-area-inset-bottom,0px)) !important;
+    background:linear-gradient(180deg,#fff,#f6f7fb) !important;
+    border:1px solid #f5f6fa !important;
+    border-radius:28px !important;
+    box-shadow:0 19px 36px rgba(1,6,18,.35) !important;
+  }
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > .navbtn[data-page="dashboard"] {grid-column:1;grid-row:1;}
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > .navbtn[data-page="goals"] {grid-column:2;grid-row:1;}
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > .navbtn[data-page="input"] {grid-column:3;grid-row:1;}
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > .navbtn[data-page="stores"] {grid-column:4;grid-row:1;}
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > .rpm-more-button {grid-column:5;grid-row:1;}
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active .nav-icon {
+    transform:translateY(-4px) !important;
+    filter:drop-shadow(0 4px 7px rgba(95,76,189,.18));
+  }
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > .navbtn[data-page="input"] .nav-icon {
+    border-radius:50% !important;
+    width:41px !important;height:41px !important;flex-basis:41px !important;
+    background:linear-gradient(140deg,#8a73fc,#6552c8) !important;
+    color:#fff !important;
+    box-shadow:0 6px 12px rgba(91,69,194,.3) !important;
+    transform:translateY(-10px) !important;
+  }
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > .navbtn[data-page="input"] {padding-top:0 !important;}
+  body[data-rpm-nav="floating"] .sidebar nav.nav-modern > .navbtn[data-page="input"] .nav-short {margin-top:-6px;}
+  /* 04 — Neumorphism: sculpted, gentle shadows */
+  body[data-rpm-nav="neumorph"] .sidebar {
+    --rpm-foreground:#777f8a;--rpm-selected:#4b659d;
+    background:linear-gradient(140deg,#edf0f6,#e3e7ee) !important;
+    border:1px solid #f6f8fc !important;
+    border-radius:29px !important;
+    box-shadow:8px 9px 22px rgba(0,0,0,.24),-7px -7px 16px rgba(255,255,255,.16) !important;
+  }
+  body[data-rpm-nav="neumorph"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active {
+    background:#e8ecf3 !important;
+    border-radius:19px !important;
+    box-shadow:inset 4px 4px 7px #cbd0d9,inset -4px -4px 8px #fff !important;
+  }
+  /* 05 — Pill Highlight: unmistakable selected capsule */
+  body[data-rpm-nav="pill"] .sidebar {--rpm-foreground:#7b7e8a;--rpm-selected:#6e52d1;background:#fff !important;border-radius:25px !important;}
+  body[data-rpm-nav="pill"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active {
+    background:var(--rpm-nav-accent-soft) !important;border-radius:18px !important;
+  }
+  /* 06 — Center FAB: Input as central primary action */
+  body[data-rpm-nav="fab"] .sidebar {--rpm-foreground:#888a97;--rpm-selected:#7056d9;background:#fff !important;border-radius:27px !important;}
+  body[data-rpm-nav="fab"] .sidebar nav.nav-modern > .navbtn[data-page="dashboard"] {grid-column:1;grid-row:1;}
+  body[data-rpm-nav="fab"] .sidebar nav.nav-modern > .navbtn[data-page="goals"] {grid-column:2;grid-row:1;}
+  body[data-rpm-nav="fab"] .sidebar nav.nav-modern > .navbtn[data-page="input"] {grid-column:3;grid-row:1;}
+  body[data-rpm-nav="fab"] .sidebar nav.nav-modern > .navbtn[data-page="stores"] {grid-column:4;grid-row:1;}
+  body[data-rpm-nav="fab"] .sidebar nav.nav-modern > .rpm-more-button {grid-column:5;grid-row:1;}
+  body[data-rpm-nav="fab"] .sidebar nav.nav-modern > .navbtn[data-page="input"] {overflow:visible !important;}
+  body[data-rpm-nav="fab"] .sidebar nav.nav-modern > .navbtn[data-page="input"] .nav-icon {
+    width:53px !important;height:53px !important;flex-basis:53px !important;
+    border-radius:50% !important;
+    background:linear-gradient(145deg,#9671ff,#6547c6) !important;
+    color:#fff !important;
+    box-shadow:0 8px 19px rgba(92,59,181,.35),0 0 0 5px rgba(142,116,243,.09) !important;
+    transform:translateY(-14px) !important;
+  }
+  body[data-rpm-nav="fab"] .sidebar nav.nav-modern > .navbtn[data-page="input"] .nav-short {transform:translateY(-12px);font-weight:800 !important;color:#6252bc !important;}
+  /* 07 — Gradient Bold: saturated violet/pink rail */
+  body[data-rpm-nav="gradient"] .sidebar {
+    --rpm-foreground:rgba(255,255,255,.74);--rpm-selected:#fff;
+    background:linear-gradient(107deg,#4f42c4 0%,#8053de 46%,#f45c9f 100%) !important;
+    border:1px solid rgba(255,255,255,.22) !important;
+    border-radius:25px !important;
+    box-shadow:0 16px 32px rgba(76,47,163,.36) !important;
+  }
+  body[data-rpm-nav="gradient"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active {
+    background:rgba(255,255,255,.18) !important;border-radius:18px !important;
+  }
+  /* 08 — Outline Icons: light, monochrome and delicate */
+  body[data-rpm-nav="outline"] .sidebar {
+    --rpm-foreground:#7f8592;--rpm-selected:#272d3a;
+    background:#fff !important;border-radius:13px !important;
+    border:1px solid #eef0f4 !important;
+    box-shadow:0 7px 19px rgba(0,0,0,.13) !important;
+  }
+  body[data-rpm-nav="outline"] .sidebar nav.nav-modern .nav-icon svg {stroke-width:1.45 !important;}
+  body[data-rpm-nav="outline"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active::after {
+    content:'' !important;position:absolute;bottom:0;left:calc(50% - 10px);height:2px;width:20px;
+    border-radius:3px;background:var(--rpm-nav-accent);
+  }
+  /* 09 — Tab with Indicator: clean bar with tracking top line */
+  body[data-rpm-nav="indicator"] .sidebar {
+    --rpm-foreground:#777a87;--rpm-selected:#6052ad;
+    width:100vw !important;max-width:none !important;
+    bottom:0 !important;height:calc(72px + env(safe-area-inset-bottom,0px)) !important;
+    padding:8px 12px calc(6px + env(safe-area-inset-bottom,0px)) !important;
+    border:0 !important;border-radius:0 !important;background:#fff !important;
+    box-shadow:0 -6px 22px rgba(0,0,0,.10) !important;
+  }
+  body[data-rpm-nav="indicator"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active::after {
+    content:'' !important;position:absolute;top:-9px;left:14%;width:72%;height:3px;border-radius:3px;
+    background:var(--rpm-nav-accent);box-shadow:0 2px 6px rgba(80,53,175,.22);
+  }
+  /* 10 — Curved Background: large soft gradient capsule */
+  body[data-rpm-nav="curved"] .sidebar {
+    --rpm-foreground:rgba(255,255,255,.8);--rpm-selected:#fff;
+    background:linear-gradient(100deg,#5a4ed4,#a477ed) !important;
+    border:1px solid rgba(255,255,255,.22) !important;
+    border-radius:44px !important;
+    box-shadow:0 13px 27px rgba(56,33,141,.28) !important;
+  }
+  body[data-rpm-nav="curved"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active {background:rgba(255,255,255,.14) !important;border-radius:40px !important;}
+  /* 11 — iOS dock: frosted silver floating strip */
+  body[data-rpm-nav="dock"] .sidebar {
+    --rpm-foreground:#747781;--rpm-selected:#6756b7;
+    bottom:calc(17px + env(safe-area-inset-bottom,0px)) !important;
+    border:1px solid rgba(255,255,255,.84) !important;
+    border-radius:31px !important;
+    background:linear-gradient(165deg,rgba(250,252,255,.96),rgba(229,233,242,.92)) !important;
+    box-shadow:0 17px 33px rgba(0,0,0,.24),inset 0 1px 2px rgba(255,255,255,.87) !important;
+    backdrop-filter:blur(20px) !important;
+    -webkit-backdrop-filter:blur(20px) !important;
+  }
+  body[data-rpm-nav="dock"] .sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button).active {
+    background:rgba(115,98,201,.12) !important;border-radius:18px !important;
+  }
+
+  .rpm-more-backdrop {position:fixed;inset:0;background:rgba(3,5,17,.45);z-index:98;}
+  .rpm-more-backdrop[hidden], .rpm-more-panel[hidden] {display:none !important;}
+  .rpm-more-panel {
+    --rpm-menu-accent:var(--rpm-nav-accent,#8168eb);
+    position:fixed;left:50%;bottom:calc(109px + env(safe-area-inset-bottom,0px));
+    transform:translateX(-50%);box-sizing:border-box;
+    width:min(390px,calc(100vw - 28px));max-height:65vh;overflow:auto;
+    padding:14px;z-index:101;
+    border-radius:23px;border:1px solid rgba(255,255,255,.12);
+    background:#202733;color:#f8f9ff;
+    box-shadow:0 22px 54px rgba(0,0,0,.40);
+    animation:rpm-nav-pop .17s ease-out;
+  }
+  .rpm-more-heading {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px 12px;font:800 14px/1.2 system-ui,sans-serif;}
+  .rpm-more-close {display:grid;place-items:center;width:35px;height:35px;border:1px solid rgba(255,255,255,.12);border-radius:50%;background:#39424f;color:white;font-size:22px;cursor:pointer;}
+  .rpm-more-link {display:flex;align-items:center;gap:13px;min-height:59px;width:100%;padding:9px 13px;margin:5px 0;border-radius:16px;border:1px solid rgba(255,255,255,.07);background:#2b3441;color:#eef3fb;text-align:left;font-family:system-ui,sans-serif;cursor:pointer;}
+  .rpm-more-link .nav-icon {width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;color:#c2c7d0;font-size:21px;}
+  .rpm-more-link .nav-icon svg {width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;}
+  .rpm-more-link strong {display:block;font-size:13px;font-weight:780;}
+  .rpm-more-link small {display:block;margin-top:3px;font-size:11px;color:#aeb8ca;}
+  .rpm-more-link.active {border-color:var(--rpm-nav-accent);background:#3e4757;color:#fff;}
+  .rpm-more-link.active .nav-icon {color:var(--rpm-nav-accent);}
+  @keyframes rpm-nav-pop {from{opacity:0;transform:translate(-50%,9px) scale(.98)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+}
+@media (max-width: 360px) {
+  .sidebar {width:calc(100vw - 14px) !important;padding:6px !important;height:70px !important;}
+  .sidebar nav.nav-modern .nav-short {font-size:9px !important;letter-spacing:-.25px;}
+  .sidebar nav.nav-modern .nav-icon svg {width:21px !important;height:21px !important;}
+}
+@media (min-width:921px) {
+  .sidebar .rpm-brand-disc,.sidebar .rpm-flow-svg,.sidebar .rpm-more-button,
+  .rpm-more-panel,.rpm-more-backdrop {display:none !important;}
+}
+@media (prefers-reduced-motion:reduce){
+  .sidebar,.sidebar nav.nav-modern > :is(.navbtn,.rpm-more-button),.rpm-more-panel {transition:none !important;animation:none !important;}
+}
