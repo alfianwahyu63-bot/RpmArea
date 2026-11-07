@@ -1,0 +1,163 @@
+/* RPM Area V38 — reference-inspired continuous ribbon tab bar.
+   Only mobile navigation presentation changes: store, PLU and Supabase logic are untouched. */
+@media (max-width: 920px) {
+  .sidebar {
+    --rpm-rail-red: #ec344f;
+    --rpm-rail-surface: #242328;
+    box-sizing: border-box;
+    position: fixed;
+    top: auto;
+    bottom: calc(17px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    right: auto;
+    width: min(650px, calc(100vw - 14px));
+    min-height: 0;
+    height: 74px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0 11px 0 4px;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 999px;
+    background: linear-gradient(165deg,#2a282d,#201f25 72%,#1c1b21) !important;
+    overflow: visible;
+    box-shadow: 0 16px 34px rgba(0,0,0,.52), inset 0 2px 3px rgba(255,255,255,.045), 0 2px 0 rgba(15,10,14,.65);
+    z-index: 90;
+    isolation: isolate;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sidebar > .logo, .sidebar .side-label, .sidebar .side-bottom {display:none !important}
+  .sidebar > .rpm-brand-disc {
+    position: absolute;
+    left: 7px;
+    top: 7px;
+    width: 59px;
+    height: 59px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #e63752;
+    text-shadow: 0 0 8px rgba(229,42,78,.7);
+    font-size: 29px;
+    font-weight: 900;
+    font-style: italic;
+    background: radial-gradient(circle at 28% 19%,#35343a 0%,#2b2a2f 45%,#1a191d 100%);
+    box-shadow: 4px 5px 12px rgba(0,0,0,.55), inset 0 2px 2px rgba(255,255,255,.08);
+    z-index: 5;
+    pointer-events: none;
+    user-select: none;
+  }
+  .sidebar > .rpm-flow-svg {
+    display:block;
+    position:absolute;
+    inset: -24px 0 auto;
+    width:100%;
+    height:114px;
+    overflow: visible;
+    z-index:1;
+    pointer-events:none;
+  }
+  .sidebar .nav.nav-modern {
+    display:grid;
+    grid-template-columns:repeat(7,minmax(0,1fr));
+    gap:0;
+    width:calc(100% - 67px);
+    height:100%;
+    margin:0 0 0 67px;
+    min-width:0;
+    padding:0;
+    align-items:stretch;
+    overflow:visible;
+    z-index:2;
+    position:relative;
+  }
+  .sidebar .nav-modern .navbtn {
+    display:flex;
+    position:relative;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:7px;
+    padding:7px 0 5px;
+    width:100%;
+    max-width:none;
+    height:100%;
+    min-height:0;
+    min-width:0;
+    margin:0;
+    background:transparent !important;
+    border:0 !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    color:#bfc0c3;
+    isolation:isolate;
+    text-align:center;
+    transition:color .22s ease, transform .32s cubic-bezier(.25,.9,.32,1.2);
+    z-index:2;
+  }
+  .sidebar .nav-modern .navbtn::before,
+  .sidebar .nav-modern .navbtn::after {content:none !important;}
+  .sidebar .nav-modern .navbtn .nav-icon {
+    width:24px;
+    height:25px;
+    display:grid;
+    place-items:center;
+    margin:0;
+    padding:0;
+    border:0 !important;
+    border-radius:0 !important;
+    background:transparent !important;
+    box-shadow:none !important;
+    font-size:23px;
+    color:inherit;
+    line-height:1;
+    transform:none;
+  }
+  .sidebar .nav-modern .navbtn .nav-icon svg {width:23px;height:23px;stroke-width:2;stroke:currentColor;}
+  .sidebar .nav-modern .navbtn .nav-text {display:none;}
+  .sidebar .nav-modern .navbtn .nav-short {
+    display:block;
+    width:100%;
+    overflow:hidden;
+    text-overflow:clip;
+    font-weight:600;
+    font-size:9px;
+    line-height:1;
+    letter-spacing:-.05px;
+    white-space:nowrap;
+    color:inherit;
+  }
+  .sidebar .nav-modern .navbtn:not(.active):focus-visible {outline:2px solid #e63752;outline-offset:2px}
+  .sidebar .nav-modern .navbtn.active {
+    transform:translateY(-13px);
+    color:#e73351 !important;
+    z-index:3;
+  }
+  .sidebar .nav-modern .navbtn.active .nav-icon {color:#e73351 !important;transform:translateY(-4px);filter:drop-shadow(0 1px 4px rgba(235,48,76,.6));}
+  .sidebar .nav-modern .navbtn.active .nav-short {color:#fff !important;transform:translateY(4px);font-weight:700;}
+  .sidebar .nav-modern .navbtn.active .nav-icon::after {
+    content:'';position:absolute;top:31px;left:50%;width:5px;height:5px;
+    transform:translateX(-50%);border-radius:50%;background:#e83551;
+    box-shadow:0 0 8px #ff3449;
+  }
+  .main {padding-bottom:calc(122px + env(safe-area-inset-bottom, 0px));}
+  .toast {bottom:calc(105px + env(safe-area-inset-bottom, 0px));}
+}
+@media (max-width: 390px) {
+  .sidebar > .rpm-brand-disc {width:50px;height:50px;left:5px;top:11px;font-size:26px;}
+  .sidebar .nav.nav-modern {margin-left:55px;width:calc(100% - 55px);}
+  .sidebar .nav-modern .navbtn .nav-short {font-size:8px;letter-spacing:-.2px;}
+  .sidebar .nav-modern .navbtn .nav-icon svg {width:21px;height:21px;}
+}
+@media (max-width: 335px) {
+  .sidebar > .rpm-brand-disc {width:43px;height:43px;top:15px;}
+  .sidebar .nav.nav-modern {margin-left:47px;width:calc(100% - 47px);}
+  .sidebar .nav-modern .navbtn .nav-short {font-size:7.5px;}
+}
+@media (min-width: 921px) {
+  .sidebar > .rpm-brand-disc,.sidebar > .rpm-flow-svg {display:none;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .sidebar .nav-modern .navbtn {transition:none;}
+}
