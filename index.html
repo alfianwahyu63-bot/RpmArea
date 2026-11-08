@@ -2,9 +2,9 @@
 <html lang="id">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#111c38"><meta name="description" content="Monitoring POINT QTY 50% + Net Sales 50% untuk 12 toko dalam satu area, dengan input 7 hari dan sinkronisasi opsional.">
-<title>RPM Area V40 · 11 Gaya Navigasi</title>
+<title>RPM Area V41 · Target & Aktual Brand</title>
 <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/png" href="./icon-192.png"><link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<link rel="stylesheet" href="./style.css?v=36">
+<link rel="stylesheet" href="./style.css?v=41">
 <link rel="stylesheet" href="./insights.css?v=36"><link rel="stylesheet" href="./v35.css?v=36">
 <link rel="stylesheet" href="./nav-styles.css?v=40">
 <link rel="stylesheet" href="./nav-settings.css?v=40">
@@ -110,7 +110,12 @@
       <p class="goal-subnote">📅 Perhitungan mengikuti minggu dan <b>tanggal yang dipilih</b>. Mengubah tanggal di sini juga memperbarui Time Factor di Home. Rencana simulasi disimpan sementara per tanggal dan tidak mengubah QTY aktual tanpa konfirmasi.</p>
     </section>
     <div id="goalStoreCards" class="goal-store-grid goal-page-stores"></div>
-    <section class="surface goal-brand-section" id="goalBrandSection" hidden><div class="goal-section-title"><div><span class="goal-kicker">📦 RINCIAN PER BRAND</span><h3>Target &amp; kekurangan setiap brand</h3><p>Target per brand berasal dari Excel TARGET PERTOKO. Tanpa target brand yang lengkap, POINT tidak dapat dihitung secara akurat.</p></div></div><div id="goalBrandCards" class="goal-brand-grid"></div></section>
+    <section class="surface goal-brand-section" id="goalBrandSection" hidden><div class="goal-section-title"><div><span class="goal-kicker">📦 RINCIAN PER BRAND</span><h3>Target, aktual &amp; pencapaian setiap brand</h3><p>Menampilkan target QTY/NS, aktual sampai tanggal pilihan, pencapaian QTY, NS, POINT, serta sisa target. Target brand berasal dari Excel TARGET PERTOKO.</p></div></div><div id="goalBrandCards" class="goal-brand-grid"></div></section>
+    <details class="surface goal-recap-section" id="goalBrandRecap">
+      <summary>📋 Rekap target &amp; aktual per toko / brand <small id="goalBrandRecapCount">—</small></summary>
+      <p>Ringkasan seluruh brand per toko mengikuti filter toko, brand, dan tanggal di atas. POINT = (ACV QTY + ACV NS) ÷ 2.</p>
+      <div class="table-scroll goal-recap-scroll"><table class="goal-recap-table"><thead><tr><th>TOKO</th><th>BRAND</th><th>TARGET QTY</th><th>TARGET NS</th><th>AKTUAL QTY</th><th>AKTUAL NS</th><th>ACV QTY</th><th>ACV NS</th><th>POINT</th></tr></thead><tbody id="goalBrandRecapRows"></tbody></table></div>
+    </details>
     <section class="surface insight-advisor" id="goalAdvisor" aria-label="Smart Target Advisor" hidden>
      <div class="insight-heading"><div><span class="insight-kicker">💡 SMART TARGET ADVISOR</span><h3>Rekomendasi PLU untuk POINT 100%</h3><p>Simulasi berdasarkan HPP/unit, QTY aktual dan target toko/brand. Tidak mempertimbangkan stok, permintaan, dan kemampuan jual.</p></div></div>
      <div id="goalAdvisorCards" class="insight-advisor-cards"></div>
@@ -310,7 +315,7 @@ Kode Toko: SC94
 <script src="./catalog-delete.js?v=33"></script>
 <script src="./insights.js?v=34"></script>
 <script src="./daily-clear.js?v=33"></script>
-<script src="./app.js?v=36"></script>
+<script src="./app.js?v=41"></script>
 <script src="./v35.js?v=35"></script>
 <script src="./supabase-rest.js?v=33"></script>
 <script type="module" src="./cloud.js?v=33"></script>

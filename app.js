@@ -387,10 +387,27 @@ function renderGoals(){
  const brandSelect=$('#goalBrandFilter');brandSelect.disabled=!chosen;
  brandSelect.innerHTML='<option value="">Semua brand (target toko)</option>'+brands.map(b=>`<option value="${escapeHTML(b.name)}">${escapeHTML(b.name)}${b.tq&&b.tn?'':' · belum ada target'}</option>`).join('');brandSelect.value=goalBrand;
  renderGoalStoreCards(stores,chosen);
+ renderGoalBrandRecap(stores);
  $('#goalBrandSection').hidden=!chosen;
  $('#goalPluSection').hidden=!chosen;
  $('#goalAdvisor').hidden=!chosen;
  if(chosen){renderGoalBrandCards(chosen,brands);$('#goalPluTitle').textContent=(goalBrand?'Brand '+goalBrand:'Semua brand')+' · '+chosen.code;renderGoalPlanSummary();renderGoalPluRows();renderGoalAdvisor()}
+}
+function renderGoalBrandRecap(stores){
+ const table=$('#goalBrandRecapRows'),counter=$('#goalBrandRecapCount');
+ if(!table||!counter)return;
+ const selection=goalFilter?stores.filter(s=>s.code===goalFilter):stores;
+ const rows=[];
+ for(const st of selection){
+  for(const b of goalBrandFacts(st,viewDate())){
+   if(goalBrand&&goalNormalizeBrand(b.name)!==goalNormalizeBrand(goalBrand))continue;
+   const qPct=goalAchievement(b.qty,b.tq),nsPct=goalAchievement(b.ns,b.tn);
+   const p=qPct!==null&&nsPct!==null?(qPct+nsPct)/2:null;
+   rows.push(`<tr><td><strong>${escapeHTML(st.code)}</strong><small>${escapeHTML(st.name)}</small></td><td>${escapeHTML(b.name)}</td><td>${b.tq>0?fmt(b.tq):'—'}</td><td>${b.tn>0?money(b.tn):'—'}</td><td>${fmt(b.qty)}</td><td>${money(b.ns)}</td><td>${pct(qPct)}</td><td>${pct(nsPct)}</td><td class="goal-recap-point">${pct(p)}</td></tr>`);
+  }
+ }
+ table.innerHTML=rows.join('')||'<tr><td colspan="9">Belum ada data brand untuk toko ini.</td></tr>';
+ counter.textContent=rows.length+' baris • s.d. '+viewDateLabel(viewDate());
 }
 function renderGoalStoreCards(stores,selected){
  const list=selected?[selected]:stores;
@@ -398,18 +415,44 @@ function renderGoalStoreCards(stores,selected){
   const ctx=goalContext(st,'');const g=ctx.base,est=goalEstimate(st,'');
   return `<article class="goal-store-card ${selected?'goal-featured-store':''}"><header><div><strong>${escapeHTML(st.code)} · ${escapeHTML(st.name)}</strong><span>${(st.items||[]).length} PLU di master</span></div><span class="goal-status ${!g.valid?'missing':g.point>=100?'done':'pending'}">${!g.valid?'Target belum lengkap':g.point>=100?'✓ POINT ≥ 100%':'Kurang '+pct(g.pointGap)}</span></header>
    <div class="goal-current"><span>POINT toko aktual</span><strong>${g.valid?pct(g.point):'—'}</strong></div>
+   <div class="goal-store-quick" aria-label="Target dan aktual toko"><div><span>Target QTY</span><b>${fmt(ctx.tq)}</b></div><div><span>Aktual QTY</span><b>${fmt(ctx.actualQty)}</b><small>${pct(goalAchievement(ctx.actualQty,ctx.tq))}</small></div><div><span>Target NS</span><b>${money(ctx.tn)}</b></div><div><span>Aktual NS</span><b>${money(ctx.actualNS)}</b><small>${pct(goalAchievement(ctx.actualNS,ctx.tn))}</small></div></div>
    <div class="goal-store-metrics"><div><span>Selisih QTY ke 100%</span><b>${g.valid?fmt(g.qtyGap):'—'}</b><small>Target ${fmt(ctx.tq)}</small></div><div><span>Selisih NS ke 100%</span><b>${g.valid?money(g.nsGap):'—'}</b><small>Target ${money(ctx.tn)}</small></div></div>
    <div class="goal-estimate"><span>Simulasi QTY hingga POINT ≥ 100%</span><strong>${!g.valid?'Target tidak tersedia':est.units===null?'Perlu PLU/HPP':fmt(est.units)+' QTY'}</strong><small>${est.item?'Jika semuanya dari PLU '+escapeHTML(est.item.plu)+' ('+money(est.item.hpp)+'/unit). Simulasi, bukan prediksi pasti.':'Tambahkan PLU dengan HPP/NS per unit untuk estimasi.'}</small></div>
    ${!selected?`<button class="goal-input-link goal-choose-store" type="button" data-goal-choose-store="${escapeHTML(st.code)}">Lihat brand &amp; rencana PLU ↗</button>`:`<span class="goal-store-selected">✓ Detail toko terpilih</span>`}
   </article>`;
  }).join('')||'<div class="goal-empty">Belum ada toko. Impor Excel melalui tab Toko.</div>';
 }
+/* V41 — data target dan aktual diambil langsung dari store/brandTargets dan
+   QTY harian yang sudah ada. Tidak menambah field/rekaman di localStorage. */
+function goalAchievement(actual,target){
+ return number(target)>0 ? number(actual)/number(target)*100 : null;
+}
+function goalComparisonCell(label,target,actual,unit){
+ const valid=number(target)>0,acv=goalAchievement(actual,target);
+ const content=unit==='ns'?money:fmt;
+ const value=v=>content(v)+(unit==='qty'?' QTY':'');
+ return `<div class="goal-compare-cell">
+  <div class="goal-compare-title"><strong>${label}</strong><span class="goal-compare-acv ${acv!==null&&acv>=100?'is-done':''}">${acv===null?'Target belum ada':pct(acv)}</span></div>
+  <div class="goal-compare-values"><div><span>Target ${label}</span><b>${valid?value(target):'—'}</b></div><div><span>Aktual ${label}</span><b>${value(actual)}</b></div></div>
+  <div class="goal-compare-progress" role="progressbar" aria-label="Pencapaian ${label}" aria-valuemin="0" aria-valuemax="100" ${acv===null?'':`aria-valuenow="${Math.round(Math.min(100,Math.max(0,acv)))}"`}><i style="width:${acv===null?0:Math.max(0,Math.min(100,acv))}%"></i></div>
+ </div>`;
+}
+function goalBrandComparison(ctx){
+ const qtyAcv=goalAchievement(ctx.actualQty,ctx.tq),nsAcv=goalAchievement(ctx.actualNS,ctx.tn);
+ const point=qtyAcv===null||nsAcv===null?null:(qtyAcv+nsAcv)/2;
+ return `<div class="goal-compare" aria-label="Target dan aktual brand">
+  <div class="goal-compare-label">📊 TARGET VS AKTUAL</div>
+  <div class="goal-compare-grid">${goalComparisonCell('QTY',ctx.tq,ctx.actualQty,'qty')}${goalComparisonCell('NS',ctx.tn,ctx.actualNS,'ns')}</div>
+  <div class="goal-point-result"><span>POINT pencapaian</span><strong>${pct(point)}</strong><small>50% pencapaian QTY + 50% pencapaian NS</small></div>
+ </div>`;
+}
 function renderGoalBrandCards(st,brands=goalBrandFacts(st,viewDate())){
  $('#goalBrandCards').innerHTML=brands.map(b=>{
   const ctx=goalContext(st,b.name),g=ctx.base,after=ctx.after;
   const best=goalEstimate(st,b.name),chosen=goalNormalizeBrand(goalBrand)===goalNormalizeBrand(b.name);
   return `<article class="goal-brand-card ${chosen?'is-selected':''}"><div class="goal-brand-top"><b>${escapeHTML(b.name)}</b><span class="goal-status ${!g.valid?'missing':g.point>=100?'done':'pending'}">${!g.valid?'Target kosong':pct(g.point)}</span></div>
-   ${!g.valid?'<p class="goal-brand-unavailable">Target QTY/NS brand belum tersedia. Impor TARGET PERTOKO untuk menghitungnya.</p>':`<div class="goal-brand-stats"><div><span>QTY kurang</span><b>${fmt(g.qtyGap)}</b></div><div><span>NS kurang</span><b>${money(g.nsGap)}</b></div><div><span>POINT kurang</span><b>${pct(g.pointGap)}</b></div><div><span>QTY estimasi*</span><b>${best.units===null?'—':fmt(best.units)}</b></div></div>`}
+   ${goalBrandComparison(ctx)}
+   ${!g.valid?'<p class="goal-brand-unavailable">Target brand belum lengkap. Lengkapi target QTY dan NS lewat Excel TARGET PERTOKO agar POINT bisa dihitung.</p>':`<div class="goal-brand-stats"><div><span>QTY kurang</span><b>${fmt(g.qtyGap)}</b></div><div><span>NS kurang</span><b>${money(g.nsGap)}</b></div><div><span>POINT kurang</span><b>${pct(g.pointGap)}</b></div><div><span>QTY estimasi*</span><b>${best.units===null?'—':fmt(best.units)}</b></div></div>`}
    <p class="goal-brand-projection">${ctx.plannedQty?`Rencana +${fmt(ctx.plannedQty)} QTY / +${money(ctx.plannedNS)} NS → <b>${after.valid?pct(after.point):'POINT —'}</b>`:'Belum ada rencana tambahan QTY untuk brand ini.'}</p>
    ${best.item&&g.valid?`<small class="goal-brand-assumption">* Jika dari PLU ${escapeHTML(best.item.plu)} (${money(best.item.hpp)} per unit).</small>`:''}
    <button type="button" class="goal-brand-button" data-goal-select-brand="${escapeHTML(b.name)}">${chosen?'✓ Sedang dipilih':'Atur QTY per PLU →'}</button></article>`;

@@ -713,3 +713,42 @@ body{color:var(--ink)}
 .cloud-catalog-quickfix .btn{width:100%;white-space:normal;min-height:58px;font-weight:900;font-size:13px;background:linear-gradient(110deg,#a8fa6e,#28c9b9);color:#0c2025;border:0}
 #cloudConflict #cloudCatalogQuickFix[hidden],#cloudConflict #cloudResyncNow[hidden]{display:none!important}
 #cloudCatalogSection{scroll-margin-top:18px}
+
+
+/* V41 — detail target/aktual/ACV QTY, NS, POINT per toko dan per brand */
+.goal-brand-card{gap:12px}
+.goal-compare{border:1px solid var(--border);border-radius:13px;padding:11px;background:color-mix(in srgb,var(--card) 88%,transparent);min-width:0}
+.goal-compare-label{font-size:11px;font-weight:900;letter-spacing:.06em;color:var(--accent);margin-bottom:10px}
+.goal-compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.goal-compare-cell{min-width:0;border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--canvas)}
+.goal-compare-title{display:flex;align-items:center;justify-content:space-between;gap:4px;flex-wrap:wrap;margin-bottom:9px}
+.goal-compare-title strong{font-size:12px;color:var(--ink)}
+.goal-compare-acv{font-size:10px;font-weight:900;padding:4px 6px;border-radius:8px;background:color-mix(in srgb,var(--accent) 13%,var(--card));color:var(--accent)}
+.goal-compare-acv.is-done{background:#36c78d24;color:#60ddb1}
+.goal-compare-values{display:grid;gap:7px}
+.goal-compare-values>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.goal-compare-values span{font-size:10px;color:var(--muted)}
+.goal-compare-values b{font-size:14px;color:var(--ink);line-height:1.25;overflow-wrap:anywhere}
+.goal-compare-values>div:nth-child(2) b{color:var(--accent)}
+.goal-compare-progress{height:5px;border-radius:6px;background:color-mix(in srgb,var(--muted) 22%,transparent);margin-top:11px;overflow:hidden}
+.goal-compare-progress i{display:block;height:100%;border-radius:inherit;background:var(--accent)}
+.goal-point-result{border-top:1px solid var(--border);margin-top:12px;padding-top:10px;display:flex;justify-content:space-between;align-items:center;gap:4px 10px;flex-wrap:wrap}
+.goal-point-result>span{font-size:11px;font-weight:800;color:var(--muted)}
+.goal-point-result>strong{font-size:21px;color:var(--accent);line-height:1.1}
+.goal-point-result>small{display:block;width:100%;font-size:10px;color:var(--muted)}
+.goal-store-quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.goal-store-quick>div{display:flex;flex-direction:column;gap:4px;padding:10px;background:var(--canvas);border:1px solid var(--border);border-radius:10px;min-width:0}
+.goal-store-quick span{font-size:10px;color:var(--muted)}
+.goal-store-quick b{font-size:13px;color:var(--ink);overflow-wrap:anywhere}
+.goal-store-quick small{font-size:11px;font-weight:850;color:var(--accent)}
+.goal-recap-section{margin-top:14px;min-width:0}
+.goal-recap-section summary{cursor:pointer;font-size:15px;font-weight:850;color:var(--ink);list-style-position:inside}
+.goal-recap-section summary small{font-size:11px;color:var(--muted);font-weight:600;display:block;margin:6px 0 0 21px}
+.goal-recap-section>p{font-size:11px;color:var(--muted);margin:14px 0;line-height:1.5}
+.goal-recap-scroll{max-height:460px;overflow:auto}
+.goal-recap-table{border-collapse:collapse;min-width:930px;width:100%;font-size:11px;text-align:left}
+.goal-recap-table th{position:sticky;top:0;background:var(--canvas);font-size:10px;white-space:nowrap;color:var(--muted);z-index:1}
+.goal-recap-table th,.goal-recap-table td{border-bottom:1px solid var(--border);padding:10px 9px;white-space:nowrap}
+.goal-recap-table td:first-child small{display:block;max-width:155px;white-space:normal;color:var(--muted);margin-top:4px}
+.goal-recap-point{font-weight:900;color:var(--accent)}
+@media(max-width:370px){.goal-compare{padding:8px}.goal-compare-grid{gap:5px}.goal-compare-cell{padding:7px}.goal-compare-values b{font-size:12px}}
